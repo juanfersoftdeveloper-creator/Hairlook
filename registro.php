@@ -7,13 +7,12 @@ $mensaje = "";
 // Verificar si el usuario presionó el botón de registrar
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nombre = $_POST['nombre'] ?? '';
-    $apellido = $_POST['apellido'] ?? '';
     $correo = $_POST['correo'] ?? '';
-    $contraseña = $_POST['password'] ?? '';
-    $rol = $_POST['rol'] ?? 'cliente';
+    $contrasena = $_POST['password'] ?? '';
+
 
     // Llamamos a la función registrar_usuario
-    $exito = registrar_usuario($nombre, $apellido, $correo, $contraseña, $rol);
+    $exito = registrar_usuario($nombre, $correo, $contrasena);
 
     if ($exito) {
         $mensaje = "<div style='color: green;'>¡Usuario registrado con éxito en la DB!</div>";
@@ -41,38 +40,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 
 <div class="form-container">
-    <h2>Registro HairLook</h2>
-    
-    <?php echo $mensaje; ?>
+      <h2>Registro HairLook</h2>
 
-    <form action="registro.php" method="POST">
-        <div class="form-group">
-            <label>Nombre:</label>
-            <input type="text" name="nombre" required>
-        </div>
-        <div class="form-group">
-            <label>Apellido:</label>
-            <input type="text" name="apellido" required>
-        </div>
-        <div class="form-group">
-            <label>Correo Electrónico:</label>
-            <input type="email" name="correo" required>
-        </div>
-        <div class="form-group">
-            <label>Contraseña:</label>
-            <input type="password" name="password" required>
-        </div>
-        <div class="form-group">
-            <label>Rol:</label>
-            <select name="rol">
-                <option value="cliente">Cliente</option>
-                <option value="barbero">Barbero</option>
-                <option value="administrador">Administrador</option>
-            </select>
-        </div>
-        <button type="submit" class="btn">Registrar Usuario</button>
-    </form>
-</div>
+      <?php echo $mensaje; ?>
 
-</body>
-</html>
+      <form action="registro.php" method="POST">
+          <div class="form-group">
+              <label>Nombre:</label>
+              <input type="text" name="nombre" required>
+          </div>
+          <div class="form-group">
+              <label>Correo Electrónico:</label>
+              <input type="email" name="correo" required>
+          </div>
+          <div class="form-group">
+              <label>Contraseña:</label>
+              <input type="password" name="password" required>
+          </div>
+          <button type="submit" class="btn">Registrar Usuario</button>
+      </form>
+  </div>
+
+  </body>
+  </html>

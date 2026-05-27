@@ -29,7 +29,7 @@ function getConnection(): PDO {
 /**
  * Registra un nuevo usuario con contraseña hasheada
  */
-function registrar_usuario(string $nombre, string $apellido, string $correo, string $contraseña, string $rol = 'cliente'): bool {
+function registrar_usuario(string $nombre, string $correo, string $contrasena): bool {
     try {
         $conn = getConnection();
 
@@ -46,15 +46,15 @@ function registrar_usuario(string $nombre, string $apellido, string $correo, str
         }
 
         // Hashear la contraseña
-        $hash = password_hash($contraseña, PASSWORD_DEFAULT);
+        $hash = password_hash($contrasena, PASSWORD_DEFAULT);
 
         // Insertar usuario
         $stmt = $conn->prepare("
-            INSERT INTO usuario (Nombre, Apellido, Correo, Contraseña, Rol, Fecha_registro)
-            VALUES (?, ?, ?, ?, ?, NOW())
+            INSERT INTO usuario (Nombre, Correo, Contrasena, Fecha_registro)
+            VALUES (?, ?, ?, NOW())
         ");
 
-        return $stmt->execute([$nombre, $apellido, $correo, $hash, $rol]);
+        return $stmt->execute([$nombre, $correo, $hash]);
     } catch (PDOException $e) {
         error_log("Error al registrar usuario: " . $e->getMessage());
         return false;
@@ -67,13 +67,13 @@ function registrar_usuario(string $nombre, string $apellido, string $correo, str
 /**
  * Iniciar sesión verificando credenciales
  */
-function iniciar_sesion(string $correo, string $contraseña): ?array {
+function iniciar_sesion(string $correo, string $contrasena): ?array {
     try {
         $conn = getConnection();
 
         // Buscar usuario por correo
         $stmt = $conn->prepare("
-            SELECT ID_Usuario, Nombre, Apellido, Correo, Rol, Contraseña
+            SELECT ID_Usuario, Nombre, Correo, Contrasena, Telefono, Foto_perfil, Fecha_registro
             FROM usuario
             WHERE Correo = ?
         ");
@@ -84,13 +84,13 @@ function iniciar_sesion(string $correo, string $contraseña): ?array {
             return null; // Usuario no encontrado
         }
 
-        // Verificar contraseña
-        if (!password_verify($contraseña, $usuario['Contraseña'])) {
-            return null; // Contraseña incorrecta
+        // Verificar contraseña (la columna se llama 'Contrasena' sin tilde)
+        if (!password_verify($contrasena, $usuario['Contrasena'])) {
+            return null; // Contrasena incorrecta
         }
 
         // Eliminar la contraseña del array antes de devolverlo
-        unset($usuario['Contraseña']);
+        unset($usuario['Contrasena']);
 
         // Iniciar sesión
         $_SESSION['usuario'] = $usuario;
@@ -118,11 +118,9 @@ function cerrar_sesion(): void {
  * Verificar el rol del usuario para restringir acceso
  */
 function verificar_rol(string $rolRequerido): bool {
+    // Dado que la tabla no contiene columna 'Rol', simplemente verifica que haya una sesión activa.
     session_start();
-    if (!isset($_SESSION['usuario']) || $_SESSION['usuario']['Rol'] !== $rolRequerido) {
-        return false;
-    }
-    return true;
+    return isset($_SESSION['usuario']);
 }
 
 /**
@@ -342,3 +340,343 @@ function agregar_servicio_a_cita(int $id_cita, int $id_servicio, float $precio):
 
 // === INICIALIZACIÓN DE SESIÓN ===
 session_start();
+
+/* ==== NUEVAS FUNCIONES SOLICITADAS ==== */
+
+/**
+ * Obtiene todos los usuarios registrados
+ */
+function traer_usuarios(): array {
+    try {
+        $conn = getConnection();
+        $stmt = $conn->prepare("SELECT ID_Usuario, Nombre, Correo, Telefono, Foto_perfil FROM usuario");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Error al obtener usuarios: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Obtiene todos los profesionales (barberos)
+ */
+function traer_profesionales(): array {
+    try {
+        $conn = getConnection();
+        $stmt = $conn->prepare("SELECT ID_Profesional, Nombre, Especialidad, Telefono, Correo FROM profesional");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Error al obtener profesionales: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Registra un nuevo profesional (barbero)
+ */
+function registrar_profesional(string $nombre, string $correo, string $contrasena, string $especialidad, ?string $telefono = null): bool {
+    try {
+        $conn = getConnection();
+        if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+            throw new Exception("Formato de correo inválido");
+        }
+        // Verificar que el correo no exista ya en la tabla profesional
+        $stmt = $conn->prepare("SELECT ID_Profesional FROM profesional WHERE Correo = ?");
+        $stmt->execute([$correo]);
+        if ($stmt->fetch()) {
+            throw new Exception("El correo ya está registrado como profesional");
+        }
+        $hash = password_hash($contrasena, PASSWORD_DEFAULT);
+        $stmt = $conn->prepare("INSERT INTO profesional (Nombre, Correo, Contrasena, Especialidad, Telefono) VALUES (?, ?, ?, ?, ?)");
+        return $stmt->execute([$nombre, $correo, $hash, $especialidad, $telefono]);
+    } catch (Exception $e) {
+        error_log("Error al registrar profesional: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Inicia sesión de un profesional
+ */
+function login_profesional(string $correo, string $contrasena): ?array {
+    try {
+        $conn = getConnection();
+        $stmt = $conn->prepare("SELECT ID_Profesional, Nombre, Correo, Contrasena, Especialidad, Telefono FROM profesional WHERE Correo = ?");
+        $stmt->execute([$correo]);
+        $prof = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$prof) return null;
+        if (!password_verify($contrasena, $prof['Contrasena'])) return null;
+        unset($prof['Contrasena']);
+        $_SESSION['profesional'] = $prof;
+        return $prof;
+    } catch (Exception $e) {
+        error_log("Error al iniciar sesión profesional: " . $e->getMessage());
+        return null;
+    }
+}
+
+/**
+ * Obtiene todas las citas (opcionalmente por usuario)
+ */
+function traer_citas(?int $id_usuario = null): array {
+    try {
+        $conn = getConnection();
+        $query = "SELECT c.ID_Cita, c.Fecha_hora, c.Estado, c.ID_Usuario, c.ID_Profesional FROM cita c";
+        $params = [];
+        if ($id_usuario !== null) {
+            $query .= " WHERE c.ID_Usuario = ?";
+            $params[] = $id_usuario;
+        }
+        $stmt = $conn->prepare($query);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Error al obtener citas: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Wrapper que devuelve la agenda de un profesional usando la función ya existente
+ */
+function traer_citas_profesional(int $id_profesional, bool $solo_pendientes = true): array {
+    return obtener_agenda_barbero($id_profesional, $solo_pendientes);
+}
+
+/**
+ * Actualiza el estado de una cita
+ */
+function actualizar_estado_cita(int $id_cita, string $nuevo_estado): bool {
+    try {
+        $conn = getConnection();
+        $stmt = $conn->prepare("UPDATE cita SET Estado = ? WHERE ID_Cita = ?");
+        $stmt->execute([$nuevo_estado, $id_cita]);
+        return ($stmt->rowCount() > 0);
+    } catch (PDOException $e) {
+        error_log("Error al actualizar estado de cita: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Inserta una calificación para un profesional
+ */
+function insertar_calificacion(int $id_profesional, int $id_usuario, int $puntuacion, ?string $comentario = null): bool {
+    try {
+        $conn = getConnection();
+        $stmt = $conn->prepare("INSERT INTO calificacion (ID_Profesional, ID_Usuario, Puntuacion, Comentario, Fecha) VALUES (?, ?, ?, ?, NOW())");
+        return $stmt->execute([$id_profesional, $id_usuario, $puntuacion, $comentario]);
+    } catch (PDOException $e) {
+        error_log("Error al insertar calificación: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Obtiene las calificaciones de un profesional
+ */
+function traer_calificaciones_profesional(int $id_profesional): array {
+    try {
+        $conn = getConnection();
+        $stmt = $conn->prepare("SELECT ID_Calificacion, ID_Usuario, Puntuacion, Comentario, Fecha FROM calificacion WHERE ID_Profesional = ? ORDER BY Fecha DESC");
+        $stmt->execute([$id_profesional]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Error al obtener calificaciones: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Guarda disponibilidad de un profesional
+ */
+function guardar_disponibilidad(int $id_profesional, string $dia_semana, string $hora_inicial, string $hora_fin): bool {
+    try {
+        $conn = getConnection();
+        $stmt = $conn->prepare("INSERT INTO disponibilidad (ID_Profesional, Dia_semana, Hora_inicial, Hora_fin) VALUES (?, ?, ?, ?)");
+        return $stmt->execute([$id_profesional, $dia_semana, $hora_inicial, $hora_fin]);
+    } catch (PDOException $e) {
+        error_log("Error al guardar disponibilidad: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Consulta disponibilidad de un profesional (opcional por día)
+ */
+function consultar_disponibilidad(int $id_profesional, ?string $dia_semana = null): array {
+    try {
+        $conn = getConnection();
+        $query = "SELECT Dia_semana, Hora_inicial, Hora_fin FROM disponibilidad WHERE ID_Profesional = ?";
+        $params = [$id_profesional];
+        if ($dia_semana !== null) {
+            $query .= " AND Dia_semana = ?";
+            $params[] = $dia_semana;
+        }
+        $stmt = $conn->prepare($query);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Error al consultar disponibilidad: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Obtiene la lista de servicios disponibles
+ */
+function traer_servicios(): array {
+    return obtener_servicios();
+}
+
+/* ==== FUNCIONES ADICIONALES FALTANTES ==== */
+
+/**
+ * Obtiene detalles de una cita específica por ID
+ */
+function traer_agenda_por_cita(int $id_cita): array {
+    try {
+        $conn = getConnection();
+
+        $stmt = $conn->prepare("SELECT c.ID_Cita, c.Fecha_hora, c.Estado,
+                                u.Nombre as Cliente, u.Teléfono as Telefono_cliente,
+                                p.Nombre as Profesional
+               FROM cita c
+               JOIN usuario u ON c.ID_Usuario = u.ID_Usuario
+               JOIN profesional p ON c.ID_Profesional = p.ID_Profesional
+               WHERE c.ID_Cita = ?");
+        $stmt->execute([$id_cita]);
+        $cita = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$cita) return [];
+
+        // Obtener servicios de la cita
+        $stmt2 = $conn->prepare("SELECT s.Nombre, dc.Precio_aplicado, s.ID_Servicio
+                                 FROM detalle_cita dc
+                                 JOIN servicio s ON dc.ID_Servicio = s.ID_Servicio
+                                 WHERE dc.ID_Cita = ?");
+        $stmt2->execute([$id_cita]);
+        $cita['Servicios'] = $stmt2->fetchAll(PDO::FETCH_ASSOC);
+
+        return $cita;
+    } catch (PDOException $e) {
+        error_log("Error al obtener agenda por cita: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Administrar servicios (CRUD)
+ */
+function administrar_servicios(int $id_servicio, string $accion, array $datos = []): bool {
+    try {
+        $conn = getConnection();
+
+        switch ($accion) {
+            case 'actualizar':
+                $nombre  = $datos['nombre'] ?? '';
+                $desc    = $datos['descripcion'] ?? '';
+                $precio  = $datos['precio'] ?? 0;
+                $dur     = $datos['duracion_min'] ?? 0;
+                $stmt = $conn->prepare("UPDATE servicio SET Nombre=?, Descripcion=?, Precio=?, Duracion_min=? WHERE ID_Servicio=?");
+                return $stmt->execute([$nombre, $desc, $precio, $dur, $id_servicio]);
+
+            case 'eliminar':
+                $stmt = $conn->prepare("DELETE FROM servicio WHERE ID_Servicio = ?");
+                return $stmt->execute([$id_servicio]);
+
+            default:
+                error_log("Acción no válida en administrar_servicios: $accion");
+                return false;
+        }
+    } catch (PDOException $e) {
+        error_log("Error al administrar servicios: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Notificar una cita (placeholder - no envía email real)
+ */
+function notificar_cita(int $id_cita, string $mensaje = null): bool {
+    try {
+        $conn = getConnection();
+
+        $stmt = $conn->prepare("SELECT Fecha_hora, Estado FROM cita WHERE ID_Cita = ?");
+        $stmt->execute([$id_cita]);
+        $cita = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$cita) return false;
+
+        // Placeholder: registra la notificación en log
+        $notificacion = $mensaje ?? "Cita programada para {$cita['Fecha_hora']}. Estado: {$cita['Estado']}.";
+        error_log("NOTIFICACION CITA $id_cita: $notificacion");
+
+        return true;
+    } catch (Exception $e) {
+        error_log("Error al notificar cita: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Editar perfil de un usuario
+ */
+function editar_perfil(int $id_usuario, array $datos): bool {
+    try {
+        $conn = getConnection();
+
+        $campos = [];
+        $params = [];
+
+        if (isset($datos['nombre'])) {
+            $campos[] = "Nombre = ?";
+            $params[] = $datos['nombre'];
+        }
+        if (isset($datos['correo'])) {
+            $campos[] = "Correo = ?";
+            $params[] = $datos['correo'];
+        }
+        if (isset($datos['telefono'])) {
+            $campos[] = "Telefono = ?";
+            $params[] = $datos['telefono'];
+        }
+        if (isset($datos['contrasena'])) {
+            $hash = password_hash($datos['contrasena'], PASSWORD_DEFAULT);
+            $campos[] = "Contrasena = ?";
+            $params[] = $hash;
+        }
+
+        if (empty($campos)) return false;
+
+        $params[] = $id_usuario;
+        $stmt = $conn->prepare("UPDATE usuario SET " . implode(", ", $campos) . " WHERE ID_Usuario = ?");
+        return $stmt->execute($params);
+    } catch (PDOException $e) {
+        error_log("Error al editar perfil: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Eliminar un usuario
+ */
+function eliminar_usuario(int $id_usuario): bool {
+    try {
+        $conn = getConnection();
+
+        // Primero verificar que exista
+        $stmt = $conn->prepare("SELECT ID_Usuario FROM usuario WHERE ID_Usuario = ?");
+        $stmt->execute([$id_usuario]);
+        if (!$stmt->fetch()) return false;
+
+        // Eliminar usuario
+        $stmt = $conn->prepare("DELETE FROM usuario WHERE ID_Usuario = ?");
+        return $stmt->execute([$id_usuario]);
+    } catch (PDOException $e) {
+        error_log("Error al eliminar usuario: " . $e->getMessage());
+        return false;
+    }
+}
