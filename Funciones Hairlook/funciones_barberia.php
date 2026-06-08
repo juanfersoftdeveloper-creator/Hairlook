@@ -118,9 +118,16 @@ function cerrar_sesion(): void {
  * Verificar el rol del usuario para restringir acceso
  */
 function verificar_rol(string $rolRequerido): bool {
-    // Dado que la tabla no contiene columna 'Rol', simplemente verifica que haya una sesión activa.
-    session_start();
-    return isset($_SESSION['usuario']);
+    //session_start();
+    
+    if ($rolRequerido === 'barbero') {
+        return isset($_SESSION['profesional']); // Verifica si es barbero
+    }
+    
+    if ($rolRequerido === 'cliente') {
+        return isset($_SESSION['usuario']); // Verifica si es cliente
+    }
+    return false;
 }
 
 /**
@@ -195,7 +202,7 @@ function obtener_agenda_barbero(int $id_profesional, bool $solo_pendientes = tru
 
         $query = "
             SELECT c.ID_Cita, c.Fecha_hora, c.Estado,
-                   u.Nombre as Cliente, u.Teléfono as Telefono_cliente,
+                   u.Nombre as Cliente, u.Telefono as Telefono_cliente,
                    u.ID_Usuario
             FROM cita c
             JOIN usuario u ON c.ID_Usuario = u.ID_Usuario
@@ -305,7 +312,7 @@ function obtener_servicios(): array {
         $conn = getConnection();
 
         $stmt = $conn->prepare("
-            SELECT ID_Servicio, Nombre, Descripción, Precio, Duracion_min
+            SELECT ID_Servicio, Nombre, Descripcion, Precio, Duracion_min
             FROM servicio
             ORDER BY Precio ASC
         ");
@@ -339,7 +346,7 @@ function agregar_servicio_a_cita(int $id_cita, int $id_servicio, float $precio):
 }
 
 // === INICIALIZACIÓN DE SESIÓN ===
-session_start();
+//session_start();
 
 /* ==== NUEVAS FUNCIONES SOLICITADAS ==== */
 
@@ -541,7 +548,7 @@ function traer_agenda_por_cita(int $id_cita): array {
         $conn = getConnection();
 
         $stmt = $conn->prepare("SELECT c.ID_Cita, c.Fecha_hora, c.Estado,
-                                u.Nombre as Cliente, u.Teléfono as Telefono_cliente,
+                                u.Nombre as Cliente, u.Telefono as Telefono_cliente,
                                 p.Nombre as Profesional
                FROM cita c
                JOIN usuario u ON c.ID_Usuario = u.ID_Usuario
@@ -569,19 +576,39 @@ function traer_agenda_por_cita(int $id_cita): array {
 
 /**
  * Administrar servicios (CRUD)
+ * - Si $id_servicio es null y $accion === 'actualizar', inserta un nuevo servicio y devuelve el ID generado.
+ * - Si $id_servicio no es null y $accion === 'actualizar', actualiza el servicio y devuelve true.
+ * - Si $accion === 'eliminar', borra el servicio y devuelve true.
  */
-function administrar_servicios(int $id_servicio, string $accion, array $datos = []): bool {
+function administrar_servicios(?int $id_servicio, string $accion, array $datos = []): mixed {
     try {
         $conn = getConnection();
 
         switch ($accion) {
             case 'actualizar':
-                $nombre  = $datos['nombre'] ?? '';
-                $desc    = $datos['descripcion'] ?? '';
-                $precio  = $datos['precio'] ?? 0;
-                $dur     = $datos['duracion_min'] ?? 0;
-                $stmt = $conn->prepare("UPDATE servicio SET Nombre=?, Descripcion=?, Precio=?, Duracion_min=? WHERE ID_Servicio=?");
-                return $stmt->execute([$nombre, $desc, $precio, $dur, $id_servicio]);
+                $nombre  = $datos['Nombre'] ?? '';
+                $desc    = $datos['Descripcion'] ?? '';
+                $precio  = $datos['Precio'] ?? 0;
+                $dur     = $datos['Duracion_min'] ?? 0;
+
+                if ($id_servicio === null) {
+                    // INSERTAR nuevo servicio
+                    $stmt = $conn->prepare("
+                        INSERT INTO servicio (Nombre, Descripcion, Precio, Duracion_min)
+                        VALUES (?, ?, ?, ?)
+                    ");
+                    $stmt->execute([$nombre, $desc, $precio, $dur]);
+                    return $conn->lastInsertId(); // devuelve el ID del nuevo registro
+                } else {
+                    // ACTUALIZAR servicio existente
+                    $stmt = $conn->prepare("
+                        UPDATE servicio
+                        SET Nombre=?, Descripcion=?, Precio=?, Duracion_min=?
+                        WHERE ID_Servicio=?
+                    ");
+                    return $stmt->execute([$nombre, $desc, $precio, $dur, $id_servicio]);
+                }
+
 
             case 'eliminar':
                 $stmt = $conn->prepare("DELETE FROM servicio WHERE ID_Servicio = ?");
@@ -600,7 +627,7 @@ function administrar_servicios(int $id_servicio, string $accion, array $datos = 
 /**
  * Notificar una cita (placeholder - no envía email real)
  */
-function notificar_cita(int $id_cita, string $mensaje = null): bool {
+function notificar_cita(int $id_cita, ?string $mensaje = null): bool {
     try {
         $conn = getConnection();
 
@@ -680,3 +707,5 @@ function eliminar_usuario(int $id_usuario): bool {
         return false;
     }
 }
+
+

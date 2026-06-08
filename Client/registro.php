@@ -1,6 +1,6 @@
 <?php
 // Incluimos el archivo de funciones para poder usar 'registrar_usuario'
-require_once 'funciones_barberia.php';
+ require __DIR__ . '/../Funciones Hairlook/funciones_barberia.php';
 
 $mensaje = "";
 

@@ -87,6 +87,7 @@ CREATE TABLE `profesional` (
   `Especialidad` varchar(100) DEFAULT NULL,
   `Telefono` varchar(20) DEFAULT NULL,
   `Correo` varchar(150) DEFAULT NULL,
+  `Contrasena` varchar(255) NOT NULL,
   `Foto` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -99,7 +100,7 @@ CREATE TABLE `profesional` (
 CREATE TABLE `servicio` (
   `ID_Servicio` int(11) NOT NULL,
   `Nombre` varchar(100) NOT NULL,
-  `Descripción` text DEFAULT NULL,
+  `Descripcion` text DEFAULT NULL,
   `Precio` decimal(10,2) NOT NULL,
   `Duracion_min` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -115,7 +116,7 @@ CREATE TABLE `usuario` (
   `Nombre` varchar(100) NOT NULL,
   `Correo` varchar(150) NOT NULL,
   `Contrasena` varchar(255) NOT NULL,
-  `Teléfono` varchar(20) DEFAULT NULL,
+  `Telefono` varchar(20) DEFAULT NULL,
   `Foto_perfil` varchar(255) DEFAULT NULL,
   `Fecha_registro` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
