@@ -1,0 +1,13 @@
+{
+  "name": "php-dev-server",
+  "description": "Local PHP development server for HairLook (dev). Start with system PHP or XAMPP's PHP binary.",
+  "port": 8000,
+  "php_binary": "php",
+  "start_command_powershell": "php -S localhost:8000 -t \"C:\\Users\\MI PC\\Downloads\\XAMPP\\htdocs\\Hairlook\"",
+  "notes": [
+    "If running under XAMPP/Apache prefer using XAMPP Control Panel and place repo under htdocs.",
+    "For XAMPP's PHP binary, replace 'php' with full path, e.g. \"C:\\\\xampp\\php\\php.exe\"",
+    "This server is intended for quick local API/endpoint testing only (not for production).",
+    "Import the DB before running tests: mysql -u root -p hairlook < \"DB Hairlook\\hairlook.sql\""
+  ]
+}

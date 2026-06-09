@@ -50,9 +50,22 @@ This file gives repository-specific commands, architecture notes, and convention
 ## Existing AI assistant-related files
 - Claude/OpenCode ignore: Claudeignore/.claudecodeignore — instructs the Claude/OpenCode agent which paths to ignore (node_modules, .env, caches, logs). Copilot should honor similar ignores when exploring or proposing changes.
 
+## Repository quirks (important for automation and agents)
+- Paths with spaces: repository uses directories with spaces (e.g., "Funciones Hairlook", "DB Hairlook"). Use quoted Windows paths and backslashes when invoking commands (PowerShell or cmd).
+- README encoding: README\README.md contains non-UTF-8/garbled characters in this copy — prefer consulting source files (funciones_barberia.php and SQL) for authoritative behavior.
+- session_start(): some scripts that rely on $_SESSION assume session_start() is enabled; a few files have it commented out. Agents should not assume sessions are active — search for session_start() before relying on $_SESSION.
+- Tests are side-effecting: test/demo scripts insert data. Use a disposable local DB instance or export/restore the schema when validating.
+- Windows-first tooling: development instructions and paths target Windows/XAMPP; prefer PowerShell commands in session tooling.
+
 ## Suggested small hygiene steps for maintainers (non-mandatory)
 - Standardize require paths to a single canonical location (or add a bootstrap loader) so tests and demo scripts don't rely on fragile relative paths.
 - Externalize DB credentials into a config file or environment variables (avoid committing secrets).
 - Add a composer.json and simple test runner (PHPUnit) if you want more structured tests; update this file when that exists.
+
+## Notable files
+- Funciones Hairlook\funciones_barberia.php — main application logic and DB helpers (read first when investigating backend bugs).
+- Client\user.php — CLI demo that registers a user, logs in, creates a service and appointment; useful for smoke tests.
+- DB Hairlook\hairlook.sql — canonical schema, foreign keys and autoincrements; import before running tests.
+- Tests_general\* — lightweight test scripts called from repo root.
 
 ---

@@ -46,3 +46,4 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+copilot --resume=9e67b149-142c-4f03-9dab-5cad6b68aa20

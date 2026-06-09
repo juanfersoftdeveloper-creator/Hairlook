@@ -3,7 +3,7 @@
 // Ejecuta desde la terminal:
 //   php test_simple_validar_correo.php
 
-require_once __DIR__ . '/funciones_barberia.php';
+require_once __DIR__ . '/../Funciones Hairlook/funciones_barberia.php';
 
 function printResult(string $name, bool $passed, string $message = ''): void {
     $status = $passed ? 'OK' : 'FAIL';
