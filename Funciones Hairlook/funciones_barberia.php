@@ -346,7 +346,14 @@ function agregar_servicio_a_cita(int $id_cita, int $id_servicio, float $precio):
 }
 
 // === INICIALIZACIÓN DE SESIÓN ===
-//session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    if (!headers_sent()) {
+        session_start();
+    } else {
+        // Evitar el warning si ya se enviaron headers. Registrar para corregir en el entrypoint.
+        error_log("No se pudo iniciar la sesión en funciones_barberia.php: headers ya enviados.");
+    }
+}
 
 /* ==== NUEVAS FUNCIONES SOLICITADAS ==== */
 

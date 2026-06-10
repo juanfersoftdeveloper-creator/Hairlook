@@ -121,6 +121,19 @@ CREATE TABLE `usuario` (
   `Fecha_registro` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- --------------------------------------------------------
+--
+-- Estructura de tabla para la tabla `calificacion`
+--
+CREATE TABLE `calificacion` (
+  `ID_Calificacion` int(11) NOT NULL,
+  `ID_Profesional` int(11) NOT NULL,
+  `ID_Usuario` int(11) NOT NULL,
+  `Puntuacion` tinyint(3) NOT NULL,
+  `Comentario` text DEFAULT NULL,
+  `Fecha` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 --
 -- Índices para tablas volcadas
 --
@@ -174,6 +187,14 @@ ALTER TABLE `usuario`
   ADD UNIQUE KEY `Correo` (`Correo`);
 
 --
+-- Indices de la tabla `calificacion`
+--
+ALTER TABLE `calificacion`
+  ADD PRIMARY KEY (`ID_Calificacion`),
+  ADD KEY `ID_Profesional` (`ID_Profesional`),
+  ADD KEY `ID_Usuario` (`ID_Usuario`);
+
+--
 -- AUTO_INCREMENT de las tablas volcadas
 --
 
@@ -214,6 +235,12 @@ ALTER TABLE `usuario`
   MODIFY `ID_Usuario` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT de la tabla `calificacion`
+--
+ALTER TABLE `calificacion`
+  MODIFY `ID_Calificacion` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- Restricciones para tablas volcadas
 --
 
@@ -242,6 +269,13 @@ ALTER TABLE `disponibilidad`
 --
 ALTER TABLE `imagen_referencia`
   ADD CONSTRAINT `imagen_referencia_ibfk_1` FOREIGN KEY (`ID_Cita`) REFERENCES `cita` (`ID_Cita`);
+
+--
+-- Filtros para la tabla `calificacion`
+--
+ALTER TABLE `calificacion`
+  ADD CONSTRAINT `calificacion_ibfk_1` FOREIGN KEY (`ID_Profesional`) REFERENCES `profesional` (`ID_Profesional`),
+  ADD CONSTRAINT `calificacion_ibfk_2` FOREIGN KEY (`ID_Usuario`) REFERENCES `usuario` (`ID_Usuario`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

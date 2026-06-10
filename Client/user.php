@@ -15,14 +15,14 @@
 
   require __DIR__ . '/../Funciones Hairlook/funciones_barberia.php';
 
-  echo "=== Script iniciado ===\n";
-
+ /*/ echo "=== Script iniciado ===\n";
+  
   // ---------------------------------------------------------------
   // 1️⃣    DATA TO INSERT
   // ---------------------------------------------------------------
-  $nombre   = "Juan Fernando";              // client name
-  $correo   = "juan@email.com";        // must be a valid e‑mail
-  $contrasena = "clave123";         // password (plain text)
+  $nombre   = "andres castillo";              // client name
+  $correo   = "andres@email.com";        // must be a valid e‑mail
+  $contrasena = "12345";         // password (plain text)
   // ---------------------------------------------------------------
 
   // ---------------------------------------------------------------
@@ -167,4 +167,17 @@
   echo "\n⚙️   Estado inicial : {$citaCompleta['Estado']}\n";
 
   echo "\n=== Script finalizado ===\n";
+  */
+  //echo json_encode(traer_agenda_por_cita("7"), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n";
+  $nombre = "Samuel Perez";
+  $correo = "samuel@gmail.com";
+  $contrasena = "samuel123";
+  $especialidad = "Barberia";
+  $telefono = "1234567890";
+  $nuevo_pro = registrar_profesional( $nombre,  $correo,  $contrasena, $especialidad, $telefono);
+  if ($nuevo_pro) {
+      echo "✅ Profesional registrado correctamente. ID: $nuevo_pro\n";
+  } else {
+      echo "❌ Error al registrar el profesional.\n";
+  }
   ?>
