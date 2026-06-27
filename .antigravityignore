@@ -1,0 +1,58 @@
+# .antigravityignore
+# Patterns to exclude from model/context uploads to avoid token burn and leak of secrets.
+
+# Database dumps and large DB files
+database/
+database/*.sql
+*.sql
+*.sqlite
+*.sqlite3
+
+# Config and secrets
+config/database.php
+.env
+.env.*
+
+# Dependency and build folders
+vendor/
+node_modules/
+composer.lock
+package-lock.json
+
+# Uploaded media and large binaries
+public/uploads/
+storage/
+*.zip
+*.tar
+*.tar.gz
+*.7z
+*.rar
+*.exe
+*.dll
+
+# Images, videos, and other heavy binaries
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+*.mov
+*.psd
+
+# IDE / OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+
+# Tests fixtures / large test data
+tests/fixtures/
+tests/data/
+
+# Local scripts that may mutate DB or create lots of output
+scripts/user_flow.php
+
+# Add or remove patterns as needed for your workflow

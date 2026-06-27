@@ -88,7 +88,8 @@ CREATE TABLE `profesional` (
   `Telefono` varchar(20) DEFAULT NULL,
   `Correo` varchar(150) DEFAULT NULL,
   `Contrasena` varchar(255) NOT NULL,
-  `Foto` varchar(255) DEFAULT NULL
+  `Foto` varchar(255) DEFAULT NULL,
+  `Rating` decimal(3,2) NOT NULL DEFAULT 0.00 COMMENT 'Promedio de calificaciones, se recalcula automáticamente'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -122,15 +123,19 @@ CREATE TABLE `usuario` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
+
 --
--- Estructura de tabla para la tabla `calificacion`
+-- Estructura de tabla para la tabla `notificacion`
+-- (NUEVA: necesaria para que notificar_cita() guarde algo real
+--  y la app pueda mostrar notificaciones en HU06)
 --
-CREATE TABLE `calificacion` (
-  `ID_Calificacion` int(11) NOT NULL,
+
+CREATE TABLE `notificacion` (
+  `ID_Notificacion` int(11) NOT NULL,
+  `ID_Cita` int(11) NOT NULL,
   `ID_Profesional` int(11) NOT NULL,
-  `ID_Usuario` int(11) NOT NULL,
-  `Puntuacion` tinyint(3) NOT NULL,
-  `Comentario` text DEFAULT NULL,
+  `Mensaje` text NOT NULL,
+  `Leida` tinyint(1) NOT NULL DEFAULT 0,
   `Fecha` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -158,7 +163,8 @@ ALTER TABLE `detalle_cita`
 --
 ALTER TABLE `disponibilidad`
   ADD PRIMARY KEY (`ID_Disponibilidad`),
-  ADD KEY `ID_Profesional` (`ID_Profesional`);
+  ADD KEY `ID_Profesional` (`ID_Profesional`),
+  ADD UNIQUE KEY `uk_profesional_dia` (`ID_Profesional`, `Dia_semana`);
 
 --
 -- Indices de la tabla `imagen_referencia`
@@ -187,12 +193,12 @@ ALTER TABLE `usuario`
   ADD UNIQUE KEY `Correo` (`Correo`);
 
 --
--- Indices de la tabla `calificacion`
+-- Indices de la tabla `notificacion`
 --
-ALTER TABLE `calificacion`
-  ADD PRIMARY KEY (`ID_Calificacion`),
-  ADD KEY `ID_Profesional` (`ID_Profesional`),
-  ADD KEY `ID_Usuario` (`ID_Usuario`);
+ALTER TABLE `notificacion`
+  ADD PRIMARY KEY (`ID_Notificacion`),
+  ADD KEY `ID_Cita` (`ID_Cita`),
+  ADD KEY `ID_Profesional` (`ID_Profesional`);
 
 --
 -- AUTO_INCREMENT de las tablas volcadas
@@ -235,10 +241,10 @@ ALTER TABLE `usuario`
   MODIFY `ID_Usuario` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT de la tabla `calificacion`
+-- AUTO_INCREMENT de la tabla `notificacion`
 --
-ALTER TABLE `calificacion`
-  MODIFY `ID_Calificacion` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `notificacion`
+  MODIFY `ID_Notificacion` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Restricciones para tablas volcadas
@@ -271,11 +277,11 @@ ALTER TABLE `imagen_referencia`
   ADD CONSTRAINT `imagen_referencia_ibfk_1` FOREIGN KEY (`ID_Cita`) REFERENCES `cita` (`ID_Cita`);
 
 --
--- Filtros para la tabla `calificacion`
+-- Filtros para la tabla `notificacion`
 --
-ALTER TABLE `calificacion`
-  ADD CONSTRAINT `calificacion_ibfk_1` FOREIGN KEY (`ID_Profesional`) REFERENCES `profesional` (`ID_Profesional`),
-  ADD CONSTRAINT `calificacion_ibfk_2` FOREIGN KEY (`ID_Usuario`) REFERENCES `usuario` (`ID_Usuario`);
+ALTER TABLE `notificacion`
+  ADD CONSTRAINT `notificacion_ibfk_1` FOREIGN KEY (`ID_Cita`) REFERENCES `cita` (`ID_Cita`),
+  ADD CONSTRAINT `notificacion_ibfk_2` FOREIGN KEY (`ID_Profesional`) REFERENCES `profesional` (`ID_Profesional`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
