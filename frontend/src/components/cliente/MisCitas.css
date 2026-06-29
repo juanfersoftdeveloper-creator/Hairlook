@@ -1,0 +1,505 @@
+:root {
+  --navy: #1e2d4a;
+  --bg: #f2f3f7;
+  --white: #fff;
+  --gray: #8a95a3;
+  --lgray: #f2f3f5;
+  --border: #eeeff2;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #eab308;
+}
+
+.mis-citas-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--bg);
+  font-family: 'DM Sans', sans-serif;
+  padding-bottom: 80px;
+}
+
+/* Header */
+.mis-citas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  background-color: var(--white);
+  border-bottom: 1px solid var(--border);
+}
+
+.mis-citas-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0;
+}
+
+.btn-nueva-cita {
+  padding: 8px 16px;
+  background-color: var(--navy);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.btn-nueva-cita:hover {
+  background-color: #162a46;
+}
+
+/* Tabs */
+.tabs-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  padding: 0 20px;
+  background-color: var(--white);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.tab-btn {
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.tab-btn.active {
+  color: var(--navy);
+  border-bottom-color: var(--navy);
+}
+
+.tab-btn:hover {
+  color: var(--navy);
+}
+
+/* Contenido */
+.mis-citas-content {
+  flex: 1;
+  padding: 0 20px;
+  overflow-y: auto;
+}
+
+.tab-content {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.empty-state p {
+  font-size: 16px;
+  color: var(--gray);
+  margin: 0 0 20px 0;
+}
+
+.btn-agendar {
+  padding: 12px 24px;
+  background-color: var(--navy);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.btn-agendar:hover {
+  background-color: #162a46;
+}
+
+/* Citas List */
+.citas-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.cita-card {
+  background-color: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.cita-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.cita-card.historial {
+  border-left: 4px solid var(--green);
+}
+
+/* Cita Header */
+.cita-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.cita-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-confirmada {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: var(--green);
+}
+
+.badge-pendiente {
+  background-color: rgba(234, 179, 8, 0.1);
+  color: var(--yellow);
+}
+
+/* Cita Info */
+.cita-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.info-row .label {
+  color: var(--gray);
+  font-weight: 500;
+}
+
+.info-row .value {
+  color: var(--navy);
+  font-weight: 600;
+}
+
+.info-row .value.price {
+  color: var(--green);
+  font-weight: 700;
+}
+
+/* Botones de Cita */
+.btn-cancelar,
+.btn-calificar {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.btn-cancelar {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--red);
+}
+
+.btn-cancelar:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+}
+
+.btn-calificar {
+  background-color: rgba(234, 179, 8, 0.1);
+  color: var(--yellow);
+}
+
+.btn-calificar:hover {
+  background-color: rgba(234, 179, 8, 0.2);
+}
+
+/* Estrellas Display */
+.estrellas-display {
+  display: flex;
+  gap: 4px;
+}
+
+.estrellas-display .estrella {
+  font-size: 16px;
+  color: var(--border);
+}
+
+.estrellas-display .estrella.filled {
+  color: var(--yellow);
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  z-index: 100;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background-color: var(--white);
+  width: 100%;
+  max-width: 100%;
+  border-radius: 20px 20px 0 0;
+  animation: slideUp 0.3s ease;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--gray);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close-btn:hover {
+  color: var(--navy);
+}
+
+/* Modal Body */
+.modal-body {
+  padding: 24px 20px;
+}
+
+.cita-titulo {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0 0 4px 0;
+}
+
+.cita-prof {
+  font-size: 13px;
+  color: var(--gray);
+  margin: 0 0 20px 0;
+}
+
+/* Estrellas Selector */
+.estrellas-selector {
+  margin-bottom: 24px;
+}
+
+.estrellas-selector label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 12px;
+}
+
+.estrellas-input {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.estrella-btn {
+  background: none;
+  border: none;
+  font-size: 32px;
+  color: var(--border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.estrella-btn:hover {
+  color: var(--yellow);
+  transform: scale(1.1);
+}
+
+.estrella-btn.selected {
+  color: var(--yellow);
+}
+
+/* Comentario Section */
+.comentario-section {
+  margin-bottom: 24px;
+}
+
+.comentario-section label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.comentario-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--navy);
+  resize: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.comentario-input:focus {
+  outline: none;
+  border-color: var(--navy);
+}
+
+.comentario-input::placeholder {
+  color: var(--gray);
+}
+
+/* Modal Buttons */
+.modal-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.btn-cancelar-modal,
+.btn-enviar-calificacion {
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.btn-cancelar-modal {
+  background-color: var(--lgray);
+  color: var(--navy);
+}
+
+.btn-cancelar-modal:hover {
+  background-color: var(--border);
+}
+
+.btn-enviar-calificacion {
+  background-color: var(--navy);
+  color: var(--white);
+}
+
+.btn-enviar-calificacion:hover {
+  background-color: #162a46;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+  .mis-citas-container {
+    max-width: 600px;
+    margin: 0 auto;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+
+  .modal-overlay {
+    align-items: center;
+  }
+
+  .modal-content {
+    max-width: 500px;
+    border-radius: 16px;
+  }
+
+  .modal-buttons {
+    grid-template-columns: 1fr 1fr;
+  }
+}

@@ -1,0 +1,75 @@
+﻿# HairLook — reduce agent/indexing token use
+# Syntax matches .gitignore. Ignored paths can still be opened explicitly when needed.
+
+# --- Dependencies (largest token sink) ---
+**/node_modules/
+**/bower_components/
+**/vendor/
+
+# --- Lockfiles (large, rarely edited by hand) ---
+**/package-lock.json
+**/yarn.lock
+**/pnpm-lock.yaml
+**/composer.lock
+
+# --- Build & cache outputs ---
+**/dist/
+**/dist-ssr/
+**/build/
+**/out/
+**/.vite/
+**/.cache/
+**/__pycache__/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.tox/
+
+# --- Logs ---
+**/*.log
+**/logs/
+
+# --- Environment & secrets ---
+**/.env
+**/.env.*
+**/.env.local
+
+# --- IDE, OS, and VCS metadata ---
+**/.git/
+**/.vscode/
+**/.idea/
+**/.DS_Store
+**/Thumbs.db
+
+# --- Binary & media (not useful as text context) ---
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.gif
+**/*.webp
+**/*.ico
+**/*.woff
+**/*.woff2
+**/*.ttf
+**/*.eot
+**/*.mp4
+**/*.mp3
+**/*.pdf
+
+# --- Database dumps (large; open manually when schema work is needed) ---
+**/*.sql
+**/*.sqlite
+**/*.sqlite3
+**/*.db
+
+# --- Office / binary docs ---
+**/*.docx
+**/*.doc
+**/*.xlsx
+**/*.pptx
+
+# --- Legacy / duplicate folders (active code lives in backend/ and frontend/) ---
+Client/
+Funciones Hairlook/
+Tests_general/
+DB Hairlook/
+Claudeignore/

@@ -1,0 +1,105 @@
+:root {
+  --navy: #1e2d4a;
+  --bg: #f2f3f7;
+  --white: #fff;
+  --gray: #8a95a3;
+  --border: #eeeff2;
+}
+
+.citas-profesional-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--bg);
+  font-family: 'DM Sans', sans-serif;
+  padding-bottom: 80px;
+}
+
+.citas-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background-color: var(--white);
+  border-bottom: 1px solid var(--border);
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--navy);
+  cursor: pointer;
+}
+
+.citas-header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0;
+}
+
+.citas-content {
+  flex: 1;
+  padding: 20px;
+}
+
+.cita-card {
+  background: var(--white);
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  border-left: 4px solid var(--border);
+}
+
+.cita-card.nueva {
+  border-left-color: #ef4444;
+}
+
+.cita-card.confirmada {
+  border-left-color: #22c55e;
+}
+
+.cita-card h3 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: var(--navy);
+}
+
+.cita-card p {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: var(--gray);
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  background: var(--gray);
+  color: white;
+}
+
+.bottom-nav-pro {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: var(--white);
+  border-top: 1px solid var(--border);
+}
+
+.bottom-nav-pro button {
+  padding: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--gray);
+}
+
+.bottom-nav-pro button.active {
+  color: var(--navy);
+}

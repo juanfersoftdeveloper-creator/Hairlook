@@ -1,0 +1,199 @@
+.registro-page {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 20px 40px;
+  box-sizing: border-box;
+}
+
+.registro-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.registro-volver {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  color: var(--navy);
+  text-decoration: none;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.registro-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0;
+}
+
+.registro-header p {
+  font-size: 13px;
+  color: var(--gray);
+  margin: 2px 0 0;
+}
+
+.registro-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.registro-fila {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.registro-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.registro-campo--full {
+  grid-column: 1 / -1;
+}
+
+.registro-campo label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--navy);
+}
+
+.registro-campo input,
+.registro-campo select,
+.registro-campo textarea {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--navy);
+  background: var(--white);
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.registro-campo textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.registro-campo input:focus,
+.registro-campo select:focus,
+.registro-campo textarea:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
+.registro-campo input::placeholder,
+.registro-campo textarea::placeholder {
+  color: var(--gray);
+}
+
+.registro-seccion {
+  margin-top: 6px;
+}
+
+.registro-seccion label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.registro-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.registro-chip {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--white);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--gray);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.registro-chip--activo {
+  border-color: var(--navy);
+  background: var(--navy);
+  color: var(--white);
+}
+
+.registro-error {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: var(--red);
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+
+.registro-exito {
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  color: var(--green);
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+
+.registro-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: var(--navy);
+  color: var(--white);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 8px;
+}
+
+.registro-btn:hover:not(:disabled) {
+  background: var(--navy2);
+}
+
+.registro-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.registro-enlace {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 14px;
+  color: var(--gray);
+}
+
+.registro-enlace a {
+  color: var(--blue);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+@media (max-width: 380px) {
+  .registro-fila {
+    grid-template-columns: 1fr;
+  }
+}

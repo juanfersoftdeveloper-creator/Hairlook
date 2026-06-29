@@ -1,0 +1,249 @@
+:root {
+  --navy: #1e2d4a;
+  --bg: #f2f3f7;
+  --white: #fff;
+  --gray: #8a95a3;
+  --lgray: #f2f3f5;
+  --border: #eeeff2;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #eab308;
+  --blue: #3b82f6;
+}
+
+.notificaciones-profesional-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--bg);
+  font-family: 'DM Sans', sans-serif;
+  padding-bottom: 80px;
+}
+
+.notif-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background-color: var(--white);
+  border-bottom: 1px solid var(--border);
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--navy);
+  cursor: pointer;
+}
+
+.notif-header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0;
+}
+
+.notif-content {
+  flex: 1;
+  padding: 16px 20px;
+}
+
+.empty-notif {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: var(--gray);
+  font-size: 14px;
+}
+
+.notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notif-card {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background-color: var(--white);
+  border-left: 4px solid var(--border);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.notif-card.nueva_cita {
+  border-left-color: var(--red);
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+.notif-card.recordatorio {
+  border-left-color: var(--yellow);
+  background-color: rgba(234, 179, 8, 0.05);
+}
+
+.notif-card.confirmacion {
+  border-left-color: var(--green);
+  background-color: rgba(34, 197, 94, 0.05);
+}
+
+.notif-card.leida {
+  opacity: 0.6;
+}
+
+.notif-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.notif-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--navy);
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.notif-card.leida .notif-dot {
+  opacity: 0;
+}
+
+.notif-content-inner {
+  flex: 1;
+}
+
+.notif-titulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.notif-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.notif-badge.nueva-cita {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: var(--red);
+}
+
+.notif-badge.recordatorio {
+  background-color: rgba(234, 179, 8, 0.2);
+  color: var(--yellow);
+}
+
+.notif-badge.confirmacion {
+  background-color: rgba(34, 197, 94, 0.2);
+  color: var(--green);
+}
+
+.notif-hora {
+  font-size: 12px;
+  color: var(--gray);
+  font-weight: 600;
+}
+
+.notif-card h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0 0 4px 0;
+}
+
+.notif-card p {
+  font-size: 12px;
+  color: var(--gray);
+  margin: 0 0 8px 0;
+}
+
+.notif-cliente {
+  font-size: 11px;
+  color: var(--gray);
+  opacity: 0.8;
+}
+
+/* Acciones */
+.notif-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.btn-aceptar,
+.btn-rechazar {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.btn-aceptar {
+  background-color: var(--green);
+  color: white;
+}
+
+.btn-aceptar:hover {
+  background-color: #1ea853;
+}
+
+.btn-rechazar {
+  background-color: var(--red);
+  color: white;
+}
+
+.btn-rechazar:hover {
+  background-color: #dc2626;
+}
+
+/* Bottom Navigation */
+.bottom-nav-pro {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background-color: var(--white);
+  border-top: 1px solid var(--border);
+  padding: 0;
+  z-index: 50;
+}
+
+.nav-btn-pro {
+  padding: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--gray);
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.nav-btn-pro:hover,
+.nav-btn-pro.active {
+  color: var(--navy);
+}
+
+@media (min-width: 768px) {
+  .notificaciones-profesional-container {
+    max-width: 600px;
+    margin: 0 auto;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+}
