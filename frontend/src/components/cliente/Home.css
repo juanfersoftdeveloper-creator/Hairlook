@@ -10,7 +10,7 @@
   padding: 20px;
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 90px; /* Space for bottom nav */
+  padding-bottom: 220px; /* Space for bottom nav: increased to avoid covering promo */
 }
 
 .home-header-row {
@@ -178,6 +178,7 @@
   text-align: left;
   transition: transform 0.2s;
   border: 1px solid transparent;
+  margin-bottom: 220px; /* Ensure promo is above fixed bottom nav */
 }
 
 .promo-card:hover {
@@ -222,12 +223,12 @@
   padding: 10px 0 20px;
   position: fixed;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
   width: 100%;
-  max-width: 420px;
-  z-index: 100;
+  z-index: 50;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
+  max-width: none;
 }
 
 .nav-btn {

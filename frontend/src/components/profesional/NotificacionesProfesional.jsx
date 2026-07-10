@@ -1,4 +1,8 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { traerNotificaciones, marcarNotificacionLeida } from '../../services/notificacionesService';
+import { cambiarEstadoCita } from '../../services/citasService';
 import './NotificacionesProfesional.css';
 
 /**
@@ -6,39 +10,46 @@ import './NotificacionesProfesional.css';
  */
 export default function NotificacionesProfesional() {
   const navigate = useNavigate();
+  const { id: profesionalId } = useAuth();
+  const [notificaciones, setNotificaciones] = useState([]);
+  const [cargando, setCargando] = useState(true);
 
-  // Datos hardcodeados
-  const notificaciones = [
-    {
-      id: 1,
-      tipo: 'nueva_cita',
-      cliente: 'Juan Pérez',
-      servicio: 'Corte de cabello',
-      hora: '14:00',
-      leida: false,
-    },
-    {
-      id: 2,
-      tipo: 'recordatorio',
-      titulo: 'Recordatorio: Cita hoy a las 11:00',
-      cliente: 'María García',
-      leida: false,
-    },
-    {
-      id: 3,
-      tipo: 'confirmacion',
-      titulo: 'Cita confirmada por Pedro López',
-      hora: 'Mañana 15:30',
-      leida: true,
-    },
-  ];
+  // Cargar notificaciones al montar
+  useEffect(() => {
+    const cargarNotificaciones = async () => {
+      if (!profesionalId) return;
+      setCargando(true);
+      const res = await traerNotificaciones(profesionalId);
+      if (res.ok) {
+        setNotificaciones(res.data || []);
+      }
+      setCargando(false);
+    };
+    cargarNotificaciones();
+  }, [profesionalId]);
 
-  const handleAceptarCita = (id) => {
-    alert('Cita aceptada exitosamente');
+  const handleAceptarCita = async (notificacion) => {
+    if (!notificacion.ID_Cita) return;
+    const res = await cambiarEstadoCita(notificacion.ID_Cita, 'confirmada');
+    if (res.ok) {
+      await marcarNotificacionLeida(notificacion.ID_Notificacion);
+      setNotificaciones(prev => prev.filter(n => n.ID_Notificacion !== notificacion.ID_Notificacion));
+      alert('Cita aceptada exitosamente');
+    } else {
+      alert(res.error || 'Error al aceptar cita');
+    }
   };
 
-  const handleRechazarCita = (id) => {
-    alert('Cita rechazada');
+  const handleRechazarCita = async (notificacion) => {
+    if (!notificacion.ID_Cita) return;
+    const res = await cambiarEstadoCita(notificacion.ID_Cita, 'cancelada');
+    if (res.ok) {
+      await marcarNotificacionLeida(notificacion.ID_Notificacion);
+      setNotificaciones(prev => prev.filter(n => n.ID_Notificacion !== notificacion.ID_Notificacion));
+      alert('Cita rechazada');
+    } else {
+      alert(res.error || 'Error al rechazar cita');
+    }
   };
 
   return (
@@ -53,70 +64,74 @@ export default function NotificacionesProfesional() {
 
       {/* Lista de Notificaciones */}
       <div className="notif-content">
-        {notificaciones.length === 0 ? (
+        {cargando ? (
+          <div className="empty-notif"><p>Cargando notificaciones...</p></div>
+        ) : notificaciones.length === 0 ? (
           <div className="empty-notif">
             <p>No tienes notificaciones</p>
           </div>
         ) : (
           <div className="notif-list">
-            {notificaciones.map((notif) => (
-              <div
-                key={notif.id}
-                className={`notif-card ${notif.tipo} ${notif.leida ? 'leida' : 'no-leida'}`}
-              >
-                <div className="notif-dot" />
+            {notificaciones.map((notif) => {
+              const tipoNotificacion = notif.Tipo || 'nueva_cita';
+              const leida = notif.Leida ? 'leida' : 'no-leida';
+              
+              return (
+                <div
+                  key={notif.ID_Notificacion}
+                  className={`notif-card ${tipoNotificacion} ${leida}`}
+                >
+                  <div className="notif-dot" />
 
-                <div className="notif-content-inner">
-                  {/* Nueva Cita */}
-                  {notif.tipo === 'nueva_cita' && (
-                    <>
-                      <div className="notif-titulo">
-                        <span className="notif-badge nueva-cita">🆕 Nueva cita</span>
-                        <span className="notif-hora">{notif.hora}</span>
-                      </div>
-                      <h4>{notif.cliente}</h4>
-                      <p>{notif.servicio}</p>
-                      <div className="notif-actions">
-                        <button
-                          className="btn-aceptar"
-                          onClick={() => handleAceptarCita(notif.id)}
-                        >
-                          ✓ Aceptar
-                        </button>
-                        <button
-                          className="btn-rechazar"
-                          onClick={() => handleRechazarCita(notif.id)}
-                        >
-                          ✕ Rechazar
-                        </button>
-                      </div>
-                    </>
-                  )}
+                  <div className="notif-content-inner">
+                    {tipoNotificacion === 'nueva_cita' && (
+                      <>
+                        <div className="notif-titulo">
+                          <span className="notif-badge nueva-cita">🆕 Nueva cita</span>
+                          <span className="notif-hora">{notif.Hora || 'Por confirmar'}</span>
+                        </div>
+                        <h4>{notif.NombreCliente || 'Cliente'}</h4>
+                        <p>{notif.Servicio || 'Servicio sin especificar'}</p>
+                        <div className="notif-actions">
+                          <button
+                            className="btn-aceptar"
+                            onClick={() => handleAceptarCita(notif)}
+                          >
+                            ✓ Aceptar
+                          </button>
+                          <button
+                            className="btn-rechazar"
+                            onClick={() => handleRechazarCita(notif)}
+                          >
+                            ✕ Rechazar
+                          </button>
+                        </div>
+                      </>
+                    )}
 
-                  {/* Recordatorio */}
-                  {notif.tipo === 'recordatorio' && (
-                    <>
-                      <div className="notif-titulo">
-                        <span className="notif-badge recordatorio">⏰ Recordatorio</span>
-                      </div>
-                      <p>{notif.titulo}</p>
-                      <p className="notif-cliente">{notif.cliente}</p>
-                    </>
-                  )}
+                    {tipoNotificacion === 'recordatorio' && (
+                      <>
+                        <div className="notif-titulo">
+                          <span className="notif-badge recordatorio">⏰ Recordatorio</span>
+                        </div>
+                        <p>{notif.Mensaje || 'Recordatorio de cita'}</p>
+                        <p className="notif-cliente">{notif.NombreCliente || 'Cliente'}</p>
+                      </>
+                    )}
 
-                  {/* Confirmación */}
-                  {notif.tipo === 'confirmacion' && (
-                    <>
-                      <div className="notif-titulo">
-                        <span className="notif-badge confirmacion">✓ Confirmada</span>
-                        <span className="notif-hora">{notif.hora}</span>
-                      </div>
-                      <p>{notif.titulo}</p>
-                    </>
-                  )}
+                    {tipoNotificacion === 'confirmacion' && (
+                      <>
+                        <div className="notif-titulo">
+                          <span className="notif-badge confirmacion">✓ Confirmada</span>
+                          <span className="notif-hora">{notif.Hora || 'Por confirmar'}</span>
+                        </div>
+                        <p>{notif.Mensaje || 'Cita confirmada'}</p>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

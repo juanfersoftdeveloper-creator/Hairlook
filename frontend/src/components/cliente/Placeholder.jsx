@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import './Home.css'; // Reuses bottom-nav styles
 
 /**
@@ -6,6 +7,16 @@ import './Home.css'; // Reuses bottom-nav styles
  * @param {{ title: string }} props
  */
 export default function ClientPlaceholder({ title }) {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    if (confirm('¿Deseas cerrar sesión?')) {
+      logout();
+      navigate('/');
+    }
+  };
+
   return (
     <div className="cliente-home-container" style={{ display: 'flex', flexDirection: 'column', height: '100svh' }}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
@@ -15,6 +26,13 @@ export default function ClientPlaceholder({ title }) {
         <p style={{ color: 'var(--gray)', fontSize: '14px', margin: 0, maxWidth: '280px', lineHeight: 1.4 }}>
           Esta pantalla se implementará en los siguientes bloques de desarrollo.
         </p>
+
+        {title === 'Mi Perfil' && (
+          <div style={{ marginTop: 18 }}>
+            <button className="btn-nueva-cita" onClick={() => navigate('/home')} style={{ marginRight: 8 }}>Volver a Home</button>
+            <button className="btn-nueva-cita" onClick={handleLogout} style={{ backgroundColor: '#ef4444' }}>Cerrar sesión</button>
+          </div>
+        )}
       </div>
 
       {/* Bottom Navigation */}

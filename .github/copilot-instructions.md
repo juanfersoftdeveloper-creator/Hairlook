@@ -53,3 +53,4 @@ This file gives repository-specific commands, architecture notes, and convention
 - `public/registro.php` — web registration form.
 
 ---
+

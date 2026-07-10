@@ -4,6 +4,9 @@
   --white: #fff;
   --gray: #8a95a3;
   --border: #eeeff2;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warning: #eab308;
 }
 
 .citas-profesional-container {
@@ -29,6 +32,7 @@
   border: none;
   color: var(--navy);
   cursor: pointer;
+  font-size: 16px;
 }
 
 .citas-header h1 {
@@ -43,32 +47,76 @@
   padding: 20px;
 }
 
+.citas-content > p {
+  text-align: center;
+  color: var(--gray);
+  padding: 20px;
+}
+
+.error-message {
+  background-color: #fee2e2 !important;
+  color: var(--danger) !important;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
 .cita-card {
   background: var(--white);
   padding: 16px;
   border-radius: 10px;
   margin-bottom: 12px;
   border-left: 4px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cita-card.pendiente {
+  border-left-color: var(--warning);
 }
 
 .cita-card.nueva {
-  border-left-color: #ef4444;
+  border-left-color: var(--danger);
 }
 
 .cita-card.confirmada {
-  border-left-color: #22c55e;
+  border-left-color: var(--success);
 }
 
-.cita-card h3 {
+.cita-card.cancelada {
+  border-left-color: var(--gray);
+  opacity: 0.6;
+}
+
+.cita-info {
+  flex: 1;
+}
+
+.cita-info h3 {
   margin: 0 0 8px 0;
   font-size: 14px;
+  font-weight: 600;
   color: var(--navy);
 }
 
-.cita-card p {
-  margin: 0 0 8px 0;
+.cita-info p {
+  margin: 0 0 4px 0;
   font-size: 12px;
   color: var(--gray);
+}
+
+.cita-info .precio {
+  font-weight: 600;
+  color: var(--navy);
+  margin-top: 8px;
+}
+
+.cita-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 16px;
 }
 
 .badge {
@@ -76,8 +124,60 @@
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 10px;
-  background: var(--gray);
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cita-card.pendiente .badge {
+  background-color: #fef3c7;
+  color: #78350f;
+}
+
+.cita-card.confirmada .badge {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.cita-card.cancelada .badge {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-aceptar,
+.btn-rechazar {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-aceptar {
+  background-color: var(--success);
   color: white;
+}
+
+.btn-aceptar:hover {
+  background-color: #16a34a;
+  transform: translateY(-2px);
+}
+
+.btn-rechazar {
+  background-color: var(--danger);
+  color: white;
+}
+
+.btn-rechazar:hover {
+  background-color: #dc2626;
+  transform: translateY(-2px);
 }
 
 .bottom-nav-pro {
@@ -98,6 +198,11 @@
   cursor: pointer;
   font-size: 11px;
   color: var(--gray);
+  transition: color 0.2s ease;
+}
+
+.bottom-nav-pro button:hover {
+  color: var(--navy);
 }
 
 .bottom-nav-pro button.active {

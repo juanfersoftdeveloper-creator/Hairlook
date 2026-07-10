@@ -10,6 +10,31 @@
   --yellow: #eab308;
 }
 
+/* Error and Loading States */
+.error-message {
+  background-color: #fee2e2;
+  color: var(--red);
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  border-left: 4px solid var(--red);
+}
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.loading-state p {
+  font-size: 16px;
+  color: var(--gray);
+  margin: 0;
+}
+
 .mis-citas-container {
   display: flex;
   flex-direction: column;
@@ -29,11 +54,31 @@
   border-bottom: 1px solid var(--border);
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .mis-citas-header h1 {
   font-size: 22px;
   font-weight: 700;
   color: var(--navy);
   margin: 0;
+}
+
+.btn-home-header {
+  background: none;
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.btn-home-header:hover {
+  background: var(--lgray);
 }
 
 .btn-nueva-cita {
@@ -97,6 +142,30 @@
   animation: fadeIn 0.3s ease;
 }
 
+/* Detail panel tabs */
+.detail-tabs {
+  display: flex;
+  gap: 12px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.detail-tabs .tab-btn {
+  background: transparent;
+  border: none;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: var(--dark-gray, #666);
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+
+.detail-tabs .tab-btn.active {
+  color: var(--navy);
+  border-bottom-color: var(--navy);
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -151,59 +220,359 @@
   background-color: var(--white);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 16px;
+  padding: 14px;
   transition: all 0.2s ease;
+  position: relative;
+  overflow: visible;
 }
 
 .cita-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 18px rgba(13, 30, 60, 0.06);
 }
 
 .cita-card.historial {
   border-left: 4px solid var(--green);
 }
 
-/* Cita Header */
-.cita-header {
+/* Top area: service + price + badge + prof */
+.cita-card-top {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.cita-main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  gap: 12px;
 }
 
-.cita-header h3 {
+.cita-servicio {
   font-size: 16px;
   font-weight: 700;
   color: var(--navy);
   margin: 0;
 }
 
+.cita-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.precio {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--green);
+}
+
 .badge {
   display: inline-block;
-  padding: 4px 12px;
-  border-radius: 20px;
+  padding: 4px 10px;
+  border-radius: 16px;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
 }
 
 .badge-confirmada {
-  background-color: rgba(34, 197, 94, 0.1);
+  background-color: rgba(34, 197, 94, 0.12);
   color: var(--green);
 }
 
 .badge-pendiente {
-  background-color: rgba(234, 179, 8, 0.1);
+  background-color: rgba(234, 179, 8, 0.12);
   color: var(--yellow);
 }
 
-/* Cita Info */
-.cita-info {
+.cita-sub {
+  color: var(--gray);
+  font-size: 13px;
+}
+
+/* Toggle button */
+.cita-sub-and-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toggle-btn {
+  background: none;
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--navy);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.toggle-btn:hover {
+  background-color: var(--lgray);
+}
+
+.toggle-btn.open {
+  background-color: rgba(30,45,74,0.06);
+  border-color: rgba(30,45,74,0.08);
+}
+
+.cita-details {
+  margin-top: 18px;
+  padding: 22px;
+  border-radius: 12px;
+  background-color: #fbfcfe; /* subtle background to separate details */
+  border: 1px dashed var(--border);
+  animation: reveal 0.18s ease;
+}
+
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Improve spacing and alignment inside details */
+.cita-details .cita-info {
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 28px;
+  padding: 8px 0 16px 0;
+}
+
+.cita-details .info-row {
+  padding: 12px 14px;
+  background-color: rgba(255,255,255,0.8);
+  border-radius: 10px;
+  box-shadow: 0 1px 0 rgba(13,30,60,0.02) inset;
+}
+
+.cita-details .info-row .label {
+  color: var(--gray);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.cita-details .info-row .value {
+  color: var(--navy);
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.cita-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.cita-actions .btn-cancelar.small,
+.cita-actions .btn-calificar {
+  min-width: 140px;
+  padding: 10px 14px;
+}
+
+@media (max-width: 480px) {
+  .cita-details {
+    padding: 16px;
+  }
+  .cita-details .cita-info {
+    grid-template-columns: 1fr;
+  }
+  .cita-actions {
+    justify-content: stretch;
+    flex-direction: column;
+  }
+  .cita-actions .btn-cancelar.small,
+  .cita-actions .btn-calificar {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+/* Half-screen detail panel (desktop) and full-screen bottom sheet on mobile */
+.detail-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 80;
+}
+
+.detail-panel {
+  position: fixed;
+  top: 10vh;
+  bottom: 10vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(60vw, 720px);
+  background: var(--white);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 32px rgba(13,30,60,0.12);
+  z-index: 120;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
-  padding: 12px 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0;
+}
+
+.detail-actions-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-home {
+  background: none;
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.btn-home:hover {
+  background: var(--lgray);
+}
+
+.detail-prof {
+  color: var(--gray);
+  font-size: 14px;
+}
+
+.detail-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--gray);
+}
+.detail-body {
+  padding: 18px 20px;
+  overflow-y: auto;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 24px;
+}
+
+.detail-item {
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 0 rgba(13,30,60,0.02) inset;
+}
+
+.detail-item .label {
+  color: var(--gray);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.detail-item .value {
+  color: var(--navy);
+  font-weight: 800;
+  margin-top: 6px;
+  font-size: 15px;
+}
+
+.detail-item.detail-span {
+  grid-column: 1 / -1;
+}
+
+.detail-footer {
+  padding: 18px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+  .detail-panel {
+    width: 70vw;
+  }
+}
+
+@media (max-width: 640px) {
+  .detail-backdrop { z-index: 90; }
+  .detail-panel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: 100%;
+    height: 60vh;
+    max-height: 80vh;
+    border-radius: 12px 12px 0 0;
+  }
+}
+
+/* Bottom navigation */
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 14px;
+  display: flex;
+  gap: 10px;
+  background: rgba(255,255,255,0.98);
+  padding: 8px 12px;
+  border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(13,30,60,0.08);
+  z-index: 200;
+}
+
+.nav-btn {
+  background: transparent;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  color: var(--gray);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.nav-btn span {
+  font-size: 11px;
+}
+
+.nav-btn.active {
+  color: var(--navy);
+  font-weight: 700;
+}
+
+@media (min-width: 900px) {
+  /* Only hide the mobile floating nav inside Mis Citas on wide screens */
+  .mis-citas-container .bottom-nav { display: none; }
+}
+/* Cita Info */
+.cita-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+  margin: 8px 0 12px 0;
+  padding: 8px 0;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
@@ -217,51 +586,65 @@
 
 .info-row .label {
   color: var(--gray);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .info-row .value {
   color: var(--navy);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .info-row .value.price {
   color: var(--green);
-  font-weight: 700;
+  font-weight: 800;
 }
 
 /* Botones de Cita */
+.cita-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .btn-cancelar,
 .btn-calificar {
-  width: 100%;
-  padding: 12px;
+  padding: 8px 12px;
   border: none;
   border-radius: 8px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   font-family: 'DM Sans', sans-serif;
 }
 
-.btn-cancelar {
-  background-color: rgba(239, 68, 68, 0.1);
+.btn-cancelar.small {
+  background-color: rgba(239, 68, 68, 0.08);
   color: var(--red);
 }
 
-.btn-cancelar:hover {
-  background-color: rgba(239, 68, 68, 0.2);
+.btn-cancelar.small:hover {
+  background-color: rgba(239, 68, 68, 0.16);
 }
 
 .btn-calificar {
-  background-color: rgba(234, 179, 8, 0.1);
+  background-color: rgba(234, 179, 8, 0.12);
   color: var(--yellow);
 }
 
 .btn-calificar:hover {
-  background-color: rgba(234, 179, 8, 0.2);
+  background-color: rgba(234, 179, 8, 0.22);
 }
 
+/* Make sure card actions fit nicely on narrow screens */
+@media (max-width: 480px) {
+  .cita-info {
+    grid-template-columns: 1fr;
+  }
+  .cita-meta {
+    gap: 6px;
+  }
+}
 /* Estrellas Display */
 .estrellas-display {
   display: flex;

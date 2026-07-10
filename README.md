@@ -3,7 +3,7 @@
 HairLook is a web-oriented management application for user authentication, appointment scheduling, stylist agendas, and service tracking for hair salons and barber shops. The project is split into a **PHP Backend** API and a **React + Vite Frontend** application.
 
 ---
-
+Github Profile Link: https://github.com/juanfersoftdeveloper-creator/Hairlook
 ## 🛠️ Tech Stack
 
 ### Backend

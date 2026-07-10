@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { traerServicios, traerProfesionales, crearCita } from '../../services/citasService';
 import './AgendarCita.css';
 
 /**
@@ -21,19 +23,13 @@ export default function AgendarCita() {
   const [horaSeleccionada, setHoraSeleccionada] = useState(null);
   const [estiloSeleccionado, setEstiloSeleccionado] = useState(null);
 
-  // Datos hardcodeados
-  const servicios = [
-    { id: 'corte', nombre: 'Corte de cabello', duracion: '45 min', precio: 25000 },
-    { id: 'barba', nombre: 'Corte y barba', duracion: '60 min', precio: 35000 },
-    { id: 'tinte', nombre: 'Tinte', duracion: '90 min', precio: 55000 },
-    { id: 'tratamiento', nombre: 'Tratamiento capilar', duracion: '60 min', precio: 45000 },
-  ];
+  // Estados para datos del backend
+  const [servicios, setServicios] = useState([]);
+  const [profesionales, setProfesionales] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(null);
 
-  const profesionales = [
-    { id: 1, nombre: 'Carlos Mendez', especialidad: 'Cortes clásicos', rating: 4.8 },
-    { id: 2, nombre: 'María García', especialidad: 'Tintes y tratamientos', rating: 4.9 },
-    { id: 3, nombre: 'Juan Rodríguez', especialidad: 'Barbería tradicional', rating: 4.7 },
-  ];
+  const { id: usuarioId } = useAuth();
 
   const estilos = [
     { id: 'moderno', nombre: 'Moderno', emoji: '🕺' },
@@ -41,6 +37,28 @@ export default function AgendarCita() {
     { id: 'urbano', nombre: 'Urbano', emoji: '👔' },
     { id: 'creativo', nombre: 'Creativo', emoji: '🎨' },
   ];
+
+  // Cargar servicios y profesionales al montar
+  useEffect(() => {
+    const cargarDatos = async () => {
+      setCargando(true);
+      setError(null);
+      const serviciosRes = await traerServicios();
+      const profesionalesRes = await traerProfesionales();
+      if (serviciosRes.ok) {
+        setServicios(serviciosRes.data);
+      } else {
+        setError(serviciosRes.error || 'Error al cargar servicios');
+      }
+      if (profesionalesRes.ok) {
+        setProfesionales(profesionalesRes.data);
+      } else {
+        setError(prev => prev || profesionalesRes.error || 'Error al cargar profesionales');
+      }
+      setCargando(false);
+    };
+    cargarDatos();
+  }, []);
 
   // Generar próximos 5 días
   const generarDias = () => {
@@ -64,7 +82,7 @@ export default function AgendarCita() {
   const horas = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'];
 
   // Funciones de navegación
-  const handleContinuar = () => {
+  const handleContinuar = async () => {
     if (paso === 1 && !servicioSeleccionado) {
       alert('Por favor selecciona un servicio');
       return;
@@ -81,11 +99,26 @@ export default function AgendarCita() {
     if (paso < 3) {
       setPaso(paso + 1);
     } else {
-      // Confirmar reserva
-      setExito(true);
-      setTimeout(() => {
-        navigate('/citas');
-      }, 1500);
+      // Confirmar reserva - llamar al backend
+      if (!usuarioId) {
+        alert('Debes iniciar sesión para agendar una cita');
+        return;
+      }
+      const resultado = await crearCita({
+        id_usuario: usuarioId,
+        id_profesional: profesionales.find(p => p.id === profesionalSeleccionado)?.id || profesionalSeleccionado,
+        fecha: diaSeleccionado,
+        hora: horaSeleccionada,
+        tipo: modalidad,
+      });
+      if (resultado.ok) {
+        setExito(true);
+        setTimeout(() => {
+          navigate('/citas');
+        }, 1500);
+      } else {
+        alert(resultado.error || 'No se pudo agendar la cita');
+      }
     }
   };
 
@@ -96,7 +129,7 @@ export default function AgendarCita() {
   };
 
   // Obtener datos seleccionados
-  const servicioData = servicios.find(s => s.id === servicioSeleccionado);
+  const servicioData = servicios.find(s => (s.uid ?? s.id) === servicioSeleccionado);
   const profesionalData = profesionales.find(p => p.id === profesionalSeleccionado);
   const estiloData = estilos.find(e => e.id === estiloSeleccionado);
 
@@ -158,21 +191,21 @@ export default function AgendarCita() {
             <h2>Selecciona un servicio</h2>
             
             <div className="servicios-list">
-              {servicios.map((servicio) => (
+              {servicios.map((servicio, index) => (
                 <div
-                  key={servicio.id}
-                  className={`servicio-card ${servicioSeleccionado === servicio.id ? 'selected' : ''}`}
-                  onClick={() => setServicioSeleccionado(servicio.id)}
+                  key={servicio.uid ?? `${servicio.id}-${index}`}
+                  className={`servicio-card ${servicioSeleccionado === (servicio.uid ?? `${servicio.id}-${index}`) ? 'selected' : ''}`}
+                  onClick={() => setServicioSeleccionado(servicio.uid ?? `${servicio.id}-${index}`)}
                 >
                   <div className="radio-circle">
-                    {servicioSeleccionado === servicio.id && <div className="radio-inner" />}
+                    {servicioSeleccionado === (servicio.uid ?? `${servicio.id}-${index}`) && <div className="radio-inner" />}
                   </div>
                   <div className="servicio-info">
                     <h4>{servicio.nombre}</h4>
                     <p className="duracion">{servicio.duracion}</p>
                   </div>
                   <div className="servicio-precio">
-                    ${servicio.precio.toLocaleString('es-CO')}
+                    ${servicio.precio ? Number(servicio.precio).toLocaleString('es-CO') :'0'}
                   </div>
                 </div>
               ))}

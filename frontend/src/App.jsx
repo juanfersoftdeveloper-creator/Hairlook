@@ -4,6 +4,8 @@ import RegisterCliente from './components/auth/RegisterCliente';
 import RegisterProfesional from './components/auth/RegisterProfesional';
 import Home from './components/Home';
 import ClientPlaceholder from './components/cliente/Placeholder';
+import PerfilCliente from './components/cliente/PerfilCliente';
+import Cercanos from './components/cliente/Cercanos';
 import AgendarCita from './components/cliente/AgendarCita';
 import MisCitas from './components/cliente/MisCitas';
 import HomeProfesional from './components/profesional/HomeProfesional';
@@ -26,10 +28,10 @@ export default function App() {
         <Route path="/home" element={<Home />} />
         
         {/* Rutas adicionales de navegación para el cliente */}
-        <Route path="/cercanos" element={<ClientPlaceholder title="Peluqueros Cercanos" />} />
+        <Route path="/cercanos" element={<Cercanos />} />
         <Route path="/agendar" element={<AgendarCita />} />
         <Route path="/citas" element={<MisCitas />} />
-        <Route path="/perfil" element={<ClientPlaceholder title="Mi Perfil" />} />
+        <Route path="/perfil" element={<PerfilCliente />} />
         <Route path="/notificaciones" element={<ClientPlaceholder title="Notificaciones" />} />
         <Route path="/ofertas" element={<ClientPlaceholder title="Ofertas y Promociones" />} />
 
@@ -38,6 +40,7 @@ export default function App() {
         <Route path="/pro/citas" element={<CitasProfesional />} />
         <Route path="/pro/agenda" element={<AgendaProfesional />} />
         <Route path="/pro/perfil" element={<PerfilProfesional />} />
+        <Route path="/pro/perfil/:id" element={<PerfilProfesional />} />
         <Route path="/pro/notificaciones" element={<NotificacionesProfesional />} />
       </Routes>
     </div>

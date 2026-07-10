@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { traerDisponibilidad, guardarDisponibilidad } from '../../services/agendaService';
 import './AgendaProfesional.css';
 
 /**
@@ -7,6 +9,10 @@ import './AgendaProfesional.css';
  */
 export default function AgendaProfesional() {
   const navigate = useNavigate();
+  const { id: profesionalId } = useAuth();
+  const [cargando, setCargando] = useState(true);
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState(null);
   const [dias, setDias] = useState({
     lunes: { activo: true, inicio: '09:00', fin: '17:00' },
     martes: { activo: true, inicio: '09:00', fin: '17:00' },
@@ -18,6 +24,47 @@ export default function AgendaProfesional() {
   });
 
   const diasLabels = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+  const diasKeys = Object.keys(dias);
+  const diasMap = {
+    lunes: 'Lunes',
+    martes: 'Martes',
+    miercoles: 'Miércoles',
+    jueves: 'Jueves',
+    viernes: 'Viernes',
+    sabado: 'Sábado',
+    domingo: 'Domingo',
+  };
+
+  // Cargar disponibilidad al montar
+  useEffect(() => {
+    const cargarDisponibilidad = async () => {
+      if (!profesionalId) return;
+      setCargando(true);
+      setError(null);
+      const res = await traerDisponibilidad(profesionalId);
+      if (res.ok && Array.isArray(res.data)) {
+        // Procesar disponibilidad recibida
+        const nuevoDias = { ...dias };
+        res.data.forEach((item) => {
+          const diaKey = Object.keys(diasMap).find(
+            (k) => diasMap[k].toLowerCase() === (item.DiaSemana || '').toLowerCase()
+          );
+          if (diaKey) {
+            nuevoDias[diaKey] = {
+              activo: true,
+              inicio: item.HoraInicial || '09:00',
+              fin: item.HoraFin || '17:00',
+            };
+          }
+        });
+        setDias(nuevoDias);
+      } else if (!res.ok) {
+        setError(res.error);
+      }
+      setCargando(false);
+    };
+    cargarDisponibilidad();
+  }, [profesionalId]);
 
   const handleToggleDia = (dia) => {
     setDias({
@@ -33,8 +80,33 @@ export default function AgendaProfesional() {
     });
   };
 
-  const handleGuardarDisponibilidad = () => {
-    alert('Disponibilidad guardada exitosamente');
+  const handleGuardarDisponibilidad = async () => {
+    if (!profesionalId) {
+      setError('Debes iniciar sesión');
+      return;
+    }
+    
+    setGuardando(true);
+    setError(null);
+    
+    // Construir array de disponibilidad
+    const disponibilidad = diasKeys
+      .filter((dia) => dias[dia].activo)
+      .map((dia) => ({
+        dia_semana: diasMap[dia],
+        hora_inicial: dias[dia].inicio,
+        hora_fin: dias[dia].fin,
+      }));
+    
+    const res = await guardarDisponibilidad(profesionalId, disponibilidad);
+    
+    if (res.ok) {
+      alert('Disponibilidad guardada exitosamente');
+    } else {
+      setError(res.error || 'Error al guardar disponibilidad');
+    }
+    
+    setGuardando(false);
   };
 
   return (
@@ -52,47 +124,59 @@ export default function AgendaProfesional() {
         <h2>Gestiona tu horario</h2>
         <p className="intro-text">Define los días y horas en que estás disponible para atender a tus clientes.</p>
 
-        <div className="dias-disponibilidad">
-          {Object.keys(dias).map((dia, idx) => (
-            <div key={dia} className="dia-item">
-              <div className="dia-header">
-                <label className="dia-label">
-                  <input
-                    type="checkbox"
-                    checked={dias[dia].activo}
-                    onChange={() => handleToggleDia(dia)}
-                  />
-                  <span>{diasLabels[idx]}</span>
-                </label>
-              </div>
+        {error && <div style={{ color: 'red', marginBottom: '1rem' }}>⚠️ {error}</div>}
 
-              {dias[dia].activo && (
-                <div className="dia-horario">
-                  <div className="horario-input">
-                    <label>Inicio</label>
-                    <input
-                      type="time"
-                      value={dias[dia].inicio}
-                      onChange={(e) => handleChangeHora(dia, 'inicio', e.target.value)}
-                    />
+        {cargando ? (
+          <p>Cargando disponibilidad...</p>
+        ) : (
+          <>
+            <div className="dias-disponibilidad">
+              {diasKeys.map((dia, idx) => (
+                <div key={dia} className="dia-item">
+                  <div className="dia-header">
+                    <label className="dia-label">
+                      <input
+                        type="checkbox"
+                        checked={dias[dia].activo}
+                        onChange={() => handleToggleDia(dia)}
+                      />
+                      <span>{diasLabels[idx]}</span>
+                    </label>
                   </div>
-                  <div className="horario-input">
-                    <label>Fin</label>
-                    <input
-                      type="time"
-                      value={dias[dia].fin}
-                      onChange={(e) => handleChangeHora(dia, 'fin', e.target.value)}
-                    />
-                  </div>
+
+                  {dias[dia].activo && (
+                    <div className="dia-horario">
+                      <div className="horario-input">
+                        <label>Inicio</label>
+                        <input
+                          type="time"
+                          value={dias[dia].inicio}
+                          onChange={(e) => handleChangeHora(dia, 'inicio', e.target.value)}
+                        />
+                      </div>
+                      <div className="horario-input">
+                        <label>Fin</label>
+                        <input
+                          type="time"
+                          value={dias[dia].fin}
+                          onChange={(e) => handleChangeHora(dia, 'fin', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              ))}
             </div>
-          ))}
-        </div>
 
-        <button className="btn-guardar-agenda" onClick={handleGuardarDisponibilidad}>
-          💾 Guardar disponibilidad
-        </button>
+            <button 
+              className="btn-guardar-agenda" 
+              onClick={handleGuardarDisponibilidad}
+              disabled={guardando}
+            >
+              {guardando ? 'Guardando...' : '💾 Guardar disponibilidad'}
+            </button>
+          </>
+        )}
       </div>
 
       {/* Bottom Navigation */}

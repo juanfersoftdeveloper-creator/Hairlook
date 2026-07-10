@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { traerCitasUsuario, cambiarEstadoCita } from '../../services/citasService';
+import { enviarCalificacion } from '../../services/calificacionesService';
 import './MisCitas.css';
 
 /**
@@ -8,6 +11,7 @@ import './MisCitas.css';
  */
 export default function MisCitas() {
   const navigate = useNavigate();
+  const { id: usuarioId } = useAuth();
 
   // Estados
   const [tabActivo, setTabActivo] = useState('proximas');
@@ -16,80 +20,49 @@ export default function MisCitas() {
   const [comentario, setComentario] = useState('');
   const [citaSeleccionada, setCitaSeleccionada] = useState(null);
 
-  // Datos hardcodeados - Citas Próximas
-  const citasProximas = [
-    {
-      id: 1,
-      servicio: 'Corte de cabello',
-      profesional: 'Carlos Mendez',
-      fecha: '2026-07-05',
-      hora: '10:00',
-      precio: 25000,
-      estado: 'Confirmada',
-      modalidad: 'En el salón',
-    },
-    {
-      id: 2,
-      servicio: 'Corte y barba',
-      profesional: 'Juan Rodríguez',
-      fecha: '2026-07-08',
-      hora: '14:30',
-      precio: 35000,
-      estado: 'Pendiente',
-      modalidad: 'En el salón',
-    },
-    {
-      id: 3,
-      servicio: 'Tinte',
-      profesional: 'María García',
-      fecha: '2026-07-12',
-      hora: '15:00',
-      precio: 55000,
-      estado: 'Confirmada',
-      modalidad: 'A domicilio',
-    },
-  ];
+  // UI: expanded card id for details toggle
+  const [expandedId, setExpandedId] = useState(null);
 
-  // Datos hardcodeados - Historial de Citas
-  const citasHistorial = [
-    {
-      id: 101,
-      servicio: 'Corte de cabello',
-      profesional: 'Carlos Mendez',
-      fecha: '2026-06-28',
-      hora: '11:00',
-      precio: 25000,
-      calificado: false,
-      rating: 0,
-    },
-    {
-      id: 102,
-      servicio: 'Tratamiento capilar',
-      profesional: 'María García',
-      fecha: '2026-06-20',
-      hora: '09:30',
-      precio: 45000,
-      calificado: true,
-      rating: 5,
-      comentario: 'Excelente servicio, muy profesional',
-    },
-    {
-      id: 103,
-      servicio: 'Corte y barba',
-      profesional: 'Juan Rodríguez',
-      fecha: '2026-06-15',
-      hora: '16:00',
-      precio: 35000,
-      calificado: true,
-      rating: 4,
-      comentario: 'Buen trabajo, rápido y profesional',
-    },
-  ];
+  // Estados para datos del backend
+  const [citasProximas, setCitasProximas] = useState([]);
+  const [citasHistorial, setCitasHistorial] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Cargar citas al montar
+  useEffect(() => {
+    const cargarCitas = async () => {
+      setCargando(true);
+      setError(null);
+      const res = await traerCitasUsuario(usuarioId);
+      if (res.ok && Array.isArray(res.data)) {
+        // Próximas: Estado que no sea completada ni cancelada
+        const proximas = res.data.filter(c =>
+          c.Estado && !['completada', 'cancelada'].includes(c.Estado.toLowerCase())
+        );
+        // Historial: Completadas o canceladas
+        const historial = res.data.filter(c =>
+          c.Estado && ['completada', 'cancelada'].includes(c.Estado.toLowerCase())
+        );
+        setCitasProximas(proximas);
+        setCitasHistorial(historial);
+      } else {
+        setError(res.error || 'Error al cargar citas');
+      }
+      setCargando(false);
+    };
+    if (usuarioId) cargarCitas();
+  }, [usuarioId]);
 
   // Funciones
-  const handleCancelarCita = (id) => {
-    if (confirm('¿Estás seguro de que deseas cancelar esta cita?')) {
+  const handleCancelarCita = async (id) => {
+    if (!confirm('¿Estás seguro de que deseas cancelar esta cita?')) return;
+    const res = await cambiarEstadoCita(id, 'cancelada');
+    if (res.ok) {
+      setCitasProximas(prev => prev.filter(c => c.ID_Cita !== id));
       alert('Cita cancelada exitosamente');
+    } else {
+      alert(res.error || 'No se pudo cancelar la cita');
     }
   };
 
@@ -107,13 +80,33 @@ export default function MisCitas() {
     setComentario('');
   };
 
-  const handleEnviarCalificacion = () => {
+  const handleEnviarCalificacion = async () => {
     if (puntuacionSeleccionada === 0) {
       alert('Por favor selecciona una puntuación');
       return;
     }
-    alert(`Calificación de ${puntuacionSeleccionada} estrellas guardada${comentario ? ' con comentario' : ''}`);
-    handleCerrarModal();
+    
+    const res = await enviarCalificacion({
+      id_cita: citaSeleccionada?.ID_Cita,
+      id_usuario: usuarioId,
+      id_profesional: citaSeleccionada?.ID_Profesional,
+      puntuacion: puntuacionSeleccionada,
+      comentario: comentario || null,
+    });
+    
+    if (res.ok) {
+      alert('Calificación enviada exitosamente');
+      setCitasHistorial(prev =>
+        prev.map(c =>
+          c.ID_Cita === citaSeleccionada?.ID_Cita
+            ? { ...c, calificado: true, rating: puntuacionSeleccionada, comentario }
+            : c
+        )
+      );
+      handleCerrarModal();
+    } else {
+      alert(res.error || 'Error al enviar calificación');
+    }
   };
 
   const formatearFecha = (fecha) => {
@@ -137,11 +130,26 @@ export default function MisCitas() {
     );
   };
 
+  // Selected cita for the half-screen detail panel
+  const selectedCita = expandedId
+    ? (citasProximas.concat(citasHistorial)).find(c => c.ID_Cita === expandedId) || null
+    : null;
+
+  const [panelTab, setPanelTab] = useState('info');
+
+  // Reset panel tab to 'info' whenever a new cita is opened
+  useEffect(() => {
+    if (expandedId) setPanelTab('info');
+  }, [expandedId]);
+
   return (
     <div className="mis-citas-container">
       {/* Header */}
       <div className="mis-citas-header">
-        <h1>Mis Citas</h1>
+        <div className="header-left">
+          <button className="btn-home-header" onClick={() => navigate('/home')} aria-label="Volver al home">🏠 Inicio</button>
+          <h1>Mis Citas</h1>
+        </div>
         <button
           type="button"
           className="btn-nueva-cita"
@@ -169,58 +177,51 @@ export default function MisCitas() {
 
       {/* Contenido */}
       <div className="mis-citas-content">
-        {/* Tab Próximas */}
-        {tabActivo === 'proximas' && (
-          <div className="tab-content">
-            {citasProximas.length === 0 ? (
-              <div className="empty-state">
-                <p>No tienes citas próximas</p>
-                <button onClick={() => navigate('/agendar')} className="btn-agendar">
-                  Agendar una cita
-                </button>
-              </div>
-            ) : (
-              <div className="citas-list">
-                {citasProximas.map((cita) => (
-                  <div key={cita.id} className="cita-card">
-                    <div className="cita-header">
-                      <h3>{cita.servicio}</h3>
-                      <span className={`badge badge-${cita.estado.toLowerCase()}`}>
-                        {cita.estado}
-                      </span>
-                    </div>
-
-                    <div className="cita-info">
-                      <div className="info-row">
-                        <span className="label">👤 Profesional:</span>
-                        <span className="value">{cita.profesional}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="label">📅 Fecha:</span>
-                        <span className="value">{formatearFecha(cita.fecha)}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="label">🕐 Hora:</span>
-                        <span className="value">{cita.hora}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="label">📍 Modalidad:</span>
-                        <span className="value">{cita.modalidad}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="label">💰 Precio:</span>
-                        <span className="value price">
-                          ${cita.precio.toLocaleString('es-CO')}
-                        </span>
-                      </div>
-                    </div>
-
-                    <button
-                      className="btn-cancelar"
-                      onClick={() => handleCancelarCita(cita.id)}
-                    >
-                      ✕ Cancelar cita
+        {error && <div className="error-message">⚠️ {error}</div>}
+        
+        {cargando ? (
+          <div className="loading-state">
+            <p>Cargando citas...</p>
+          </div>
+        ) : (
+          <>
+            {/* Tab Próximas */}
+            {tabActivo === 'proximas' && (
+              <div className="tab-content">
+                {citasProximas.length === 0 ? (
+                  <div className="empty-state">
+                    <p>No tienes citas próximas</p>
+                    <button onClick={() => navigate('/agendar')} className="btn-agendar">
+                      Agendar una cita
                     </button>
+                  </div>
+                ) : (
+                  <div className="citas-list">
+                {citasProximas.map((cita) => (
+                  <div key={cita.ID_Cita} className="cita-card">
+                    <div className="cita-card-top">
+                      <div className="cita-main">
+                        <h3 className="cita-servicio">{cita.NombreServicio || 'Servicio'}</h3>
+                        <div className="cita-meta">
+                          <span className="precio">${parseFloat(cita.Precio).toLocaleString('es-CO')}</span>
+                          <span className={`badge badge-${cita.Estado.toLowerCase()}`}>
+                            {cita.Estado}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="cita-sub-and-toggle">
+                        <div className="cita-sub">👤 <strong>{cita.NombreProfesional}</strong>{cita.Especialidad ? ` · ${cita.Especialidad}` : ''}</div>
+                        <button
+                          type="button"
+                          className={`toggle-btn ${expandedId === cita.ID_Cita ? 'open' : ''}`}
+                          onClick={() => setExpandedId(expandedId === cita.ID_Cita ? null : cita.ID_Cita)}
+                          aria-expanded={expandedId === cita.ID_Cita}
+                        >
+                          {expandedId === cita.ID_Cita ? 'Ocultar ▴' : 'Detalles ▾'}
+                        </button>
+                      </div>
+                    </div>
+
                   </div>
                 ))}
               </div>
@@ -238,50 +239,104 @@ export default function MisCitas() {
             ) : (
               <div className="citas-list">
                 {citasHistorial.map((cita) => (
-                  <div key={cita.id} className="cita-card historial">
-                    <div className="cita-header">
-                      <h3>{cita.servicio}</h3>
-                      {cita.calificado && renderEstrellas(cita.rating)}
-                    </div>
-
-                    <div className="cita-info">
-                      <div className="info-row">
-                        <span className="label">👤 Profesional:</span>
-                        <span className="value">{cita.profesional}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="label">📅 Fecha:</span>
-                        <span className="value">{formatearFecha(cita.fecha)}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="label">💰 Precio:</span>
-                        <span className="value price">
-                          ${cita.precio.toLocaleString('es-CO')}
-                        </span>
-                      </div>
-                      {cita.calificado && cita.comentario && (
-                        <div className="info-row">
-                          <span className="label">💬 Comentario:</span>
-                          <span className="value">{cita.comentario}</span>
+                  <div key={cita.ID_Cita} className="cita-card historial">
+                    <div className="cita-card-top">
+                      <div className="cita-main">
+                        <h3 className="cita-servicio">{cita.NombreServicio || 'Servicio'}</h3>
+                        <div className="cita-meta">
+                          <span className="precio">${parseFloat(cita.Precio).toLocaleString('es-CO')}</span>
+                          <span className={`badge badge-${cita.Estado.toLowerCase()}`}>
+                            {cita.Estado}
+                          </span>
                         </div>
-                      )}
+                      </div>
+                      <div className="cita-sub-and-toggle">
+                        <div className="cita-sub">👤 <strong>{cita.NombreProfesional}</strong></div>
+                        <button
+                          type="button"
+                          className={`toggle-btn ${expandedId === cita.ID_Cita ? 'open' : ''}`}
+                          onClick={() => setExpandedId(expandedId === cita.ID_Cita ? null : cita.ID_Cita)}
+                        >
+                          {expandedId === cita.ID_Cita ? 'Ocultar ▴' : 'Detalles ▾'}
+                        </button>
+                      </div>
                     </div>
 
-                    {!cita.calificado && (
-                      <button
-                        className="btn-calificar"
-                        onClick={() => handleAbrirModalCalificacion(cita)}
-                      >
-                        ⭐ Calificar servicio
-                      </button>
-                    )}
                   </div>
                 ))}
               </div>
             )}
           </div>
         )}
+          </>
+        )}
       </div>
+
+      {/* Panel de detalles medio-pantalla */}
+      {selectedCita && (
+        <>
+          <div className="detail-backdrop" onClick={() => setExpandedId(null)} />
+          <aside className="detail-panel" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+            <div className="detail-header">
+              <h2 className="detail-title">{selectedCita.NombreServicio || 'Servicio'}</h2>
+              <div className="detail-actions-head">
+                <button className="btn-home" onClick={() => navigate('/home')} aria-label="Volver al home">🏠 Home</button>
+                <span className="detail-prof">👤 {selectedCita.NombreProfesional}</span>
+                <button className="detail-close" onClick={() => setExpandedId(null)} aria-label="Cerrar detalles">✕</button>
+              </div>
+            </div>
+
+            <div className="detail-body">
+              {/* Tabs */}
+              <div className="detail-tabs">
+                <button className={`tab-btn ${panelTab === 'info' ? 'active' : ''}`} onClick={() => setPanelTab('info')}>Información</button>
+                <button className={`tab-btn ${panelTab === 'services' ? 'active' : ''}`} onClick={() => setPanelTab('services')}>Servicios</button>
+                <button className={`tab-btn ${panelTab === 'actions' ? 'active' : ''}`} onClick={() => setPanelTab('actions')}>Acciones</button>
+              </div>
+
+              {panelTab === 'info' && (
+                <div className="detail-grid">
+                  <div className="detail-item">
+                    <div className="label">📅 Fecha</div>
+                    <div className="value">{formatearFecha(selectedCita.Fecha)}</div>
+                  </div>
+                  <div className="detail-item">
+                    <div className="label">🕐 Hora</div>
+                    <div className="value">{selectedCita.Hora}</div>
+                  </div>
+                  <div className="detail-item">
+                    <div className="label">💰 Precio</div>
+                    <div className="value">${parseFloat(selectedCita.Precio).toLocaleString('es-CO')}</div>
+                  </div>
+                  <div className="detail-item">
+                    <div className="label">🏷️ Estado</div>
+                    <div className="value">{selectedCita.Estado}</div>
+                  </div>
+                </div>
+              )}
+
+              {panelTab === 'services' && (
+                <div className="detail-services">
+                  <h4>Servicios incluidos</h4>
+                  <p className="service-list">{selectedCita.NombreServicio || '—'}</p>
+                </div>
+              )}
+
+              {panelTab === 'actions' && (
+                <div className="detail-actions-panel">
+                  <div className="cita-actions">
+                    <button className="btn-cancelar" onClick={() => { handleCancelarCita(selectedCita.ID_Cita); setExpandedId(null); }}>✕ Cancelar cita</button>
+                    {(!selectedCita.calificado && selectedCita.Estado === 'completada') && (
+                      <button className="btn-calificar" onClick={() => { handleAbrirModalCalificacion(selectedCita); setExpandedId(null); }}>⭐ Calificar</button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </aside>
+        </>
+      )}
 
       {/* Modal de Calificación */}
       {modalAbierto && (
@@ -300,8 +355,8 @@ export default function MisCitas() {
 
             {citaSeleccionada && (
               <div className="modal-body">
-                <p className="cita-titulo">{citaSeleccionada.servicio}</p>
-                <p className="cita-prof">{citaSeleccionada.profesional}</p>
+                <p className="cita-titulo">{citaSeleccionada.NombreServicio || 'Servicio'}</p>
+                <p className="cita-prof">{citaSeleccionada.NombreProfesional}</p>
 
                 {/* Estrellas interactivas */}
                 <div className="estrellas-selector">
@@ -354,6 +409,14 @@ export default function MisCitas() {
           </div>
         </div>
       )}
+      {/* Bottom navigation (mobile-friendly) */}
+      <nav className="bottom-nav" role="navigation" aria-label="Navegación inferior">
+        <button className="nav-btn" onClick={() => navigate('/home')} aria-label="Inicio">🏠<span>Inicio</span></button>
+        <button className="nav-btn active" onClick={() => navigate('/citas')} aria-label="Citas">📅<span>Citas</span></button>
+        <button className="nav-btn" onClick={() => navigate('/cercanos')} aria-label="Cercanos">📍<span>Cercanos</span></button>
+        <button className="nav-btn" onClick={() => navigate('/perfil')} aria-label="Perfil">👤<span>Perfil</span></button>
+      </nav>
+
     </div>
   );
 }

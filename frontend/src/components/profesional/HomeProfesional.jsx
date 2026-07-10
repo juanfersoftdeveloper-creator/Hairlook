@@ -1,27 +1,44 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { traerAgendaProfesional } from '../../services/agendaService';
 import './HomeProfesional.css';
 
 /**
  * Componente Home para el rol de Profesional (Bloque 5).
  */
 export default function HomeProfesional() {
-  const { user } = useAuth();
+  const { user, id: profesionalId } = useAuth();
   const navigate = useNavigate();
+  const [citasHoy, setCitasHoy] = useState([]);
+  const [citasPendientes, setCitasPendientes] = useState(0);
+  const [cargando, setCargando] = useState(true);
 
-  // Datos hardcodeados
+  // Datos hardcodeados (fallback)
   const stats = {
     ingresosDelMes: 2850000,
     rating: 4.8,
     serviciosCompletados: 47,
   };
 
-  const citasHoy = [
-    { id: 1, cliente: 'Pedro López', servicio: 'Corte de cabello', hora: '10:00', estado: 'nueva' },
-    { id: 2, cliente: 'Ana García', servicio: 'Tinte', hora: '14:00', estado: 'confirmada' },
-  ];
-
-  const citasPendientes = 2;
+  // Cargar agenda del profesional
+  useEffect(() => {
+    const cargarAgenda = async () => {
+      if (!profesionalId) return;
+      setCargando(true);
+      const res = await traerAgendaProfesional(profesionalId, false);
+      if (res.ok && Array.isArray(res.data)) {
+        const hoy = new Date().toISOString().split('T')[0];
+        const citasDeHoy = res.data.filter(c => c.Fecha && c.Fecha.startsWith(hoy));
+        const pendientes = res.data.filter(c => c.Estado === 'pendiente').length;
+        
+        setCitasHoy(citasDeHoy.slice(0, 3));
+        setCitasPendientes(pendientes);
+      }
+      setCargando(false);
+    };
+    cargarAgenda();
+  }, [profesionalId]);
 
   return (
     <div className="profesional-home-container">
@@ -29,7 +46,7 @@ export default function HomeProfesional() {
         {/* Hero Card con Stats */}
         <div className="hero-card">
           <div className="hero-header">
-            <h2>Bienvenido, Carlos 👋</h2>
+            <h2>Bienvenido, {user?.nombre || 'Profesional'} 👋</h2>
             <button
               className="bell-btn"
               onClick={() => navigate('/pro/notificaciones')}
@@ -80,16 +97,27 @@ export default function HomeProfesional() {
         <div className="citas-hoy-section">
           <h3>Citas de hoy</h3>
           <div className="citas-hoy-list">
-            {citasHoy.map((cita) => (
-              <div key={cita.id} className={`cita-hoy-card ${cita.estado}`}>
-                <div className="cita-hoy-badge">{cita.estado === 'nueva' ? '🆕' : '✓'}</div>
-                <div className="cita-hoy-info">
-                  <h4>{cita.cliente}</h4>
-                  <p>{cita.servicio}</p>
-                </div>
-                <span className="cita-hoy-hora">{cita.hora}</span>
-              </div>
-            ))}
+            {cargando ? (
+              <p>Cargando...</p>
+            ) : citasHoy.length === 0 ? (
+              <p>No hay citas para hoy</p>
+            ) : (
+              citasHoy.map((cita) => {
+                const servicioNombre = cita.Servicios?.[0]?.Nombre || 'Servicio';
+                return (
+                  <div key={cita.ID_Cita} className={`cita-hoy-card ${cita.Estado}`}>
+                    <div className="cita-hoy-badge">{cita.Estado === 'pendiente' ? '🆕' : '✓'}</div>
+                    <div className="cita-hoy-info">
+                      <h4>{cita.Cliente || 'Cliente'}</h4>
+                      <p>{servicioNombre}</p>
+                    </div>
+                    <span className="cita-hoy-hora">
+                      {cita.Fecha_hora ? new Date(cita.Fecha_hora).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : 'Hora sin definir'}
+                    </span>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 

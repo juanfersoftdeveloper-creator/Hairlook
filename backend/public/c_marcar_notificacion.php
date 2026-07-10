@@ -1,8 +1,9 @@
 <?php
 /**
- * API JSON — registro de cliente (usuario).
- * POST /backend/public/c_registro_usuario.php
+ * API JSON — Notificaciones: marcar notificación como leída
+ * POST /backend/public/c_marcar_notificacion.php
  */
+
 header('Content-Type: application/json; charset=utf-8');
 $allowed_origins = ['http://localhost:5173', 'http://localhost:5174'];
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
@@ -13,6 +14,7 @@ if (in_array($origin, $allowed_origins)) {
 }
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Credentials: true');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
@@ -34,31 +36,25 @@ if (!is_array($input)) {
     exit;
 }
 
-$nombres             = $input['nombres'] ?? '';
-$apellidos           = $input['apellidos'] ?? '';
-$cedula              = $input['cedula'] ?? '';
-$fechaNacimiento     = $input['fechaNacimiento'] ?? '';
-$direccion           = $input['direccion'] ?? '';
-$correo              = $input['correo'] ?? '';
-$password            = $input['password'] ?? '';
-$confirmarPassword   = $input['confirmarPassword'] ?? $password;
-$metodoPago          = $input['metodoPago'] ?? '';
+$id_notificacion = $input['id_notificacion'] ?? null;
 
-$exito = registrar_usuario(
-    $nombres,
-    $apellidos,
-    $cedula,
-    $fechaNacimiento,
-    $direccion,
-    $correo,
-    $password,
-    $confirmarPassword,
-    $metodoPago
-);
-
-if ($exito) {
-    echo json_encode(['ok' => true]);
-} else {
+if (null === $id_notificacion) {
     http_response_code(400);
-    echo json_encode(['ok' => false, 'error' => 'No se pudo registrar el usuario. Verifica los datos e intenta de nuevo.']);
+    echo json_encode(['ok' => false, 'error' => 'Parámetro id_notificacion requerido']);
+    exit;
+}
+
+try {
+    $resultado = marcar_notificacion_leida((int)$id_notificacion);
+
+    if ($resultado) {
+        echo json_encode(['ok' => true]);
+    } else {
+        http_response_code(500);
+        echo json_encode(['ok' => false, 'error' => 'No se pudo marcar la notificación']);
+    }
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['ok' => false, 'error' => 'Error en el servidor']);
+    error_log('Error en c_marcar_notificacion.php: ' . $e->getMessage());
 }

@@ -1,5 +1,8 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { traerCalificacionesProfesional } from '../../services/calificacionesService';
+import { traerProfesionales } from '../../services/citasService';
 import './PerfilProfesional.css';
 
 /**
@@ -7,37 +10,82 @@ import './PerfilProfesional.css';
  */
 export default function PerfilProfesional() {
   const navigate = useNavigate();
+  const params = useParams();
+  const { id: profesionalIdFromAuth, logout, user } = useAuth();
   const [subTab, setSubTab] = useState('info');
+  const [calificaciones, setCalificaciones] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [profData, setProfData] = useState(null);
 
-  // Datos hardcodeados
-  const profesional = {
-    nombre: 'Carlos Mendez',
-    especialidad: 'Cortes clásicos y modernos',
-    avatar: '💈',
-    rating: 4.8,
-    reviews: 127,
-    servicios: 47,
-    bio: 'Barbero con 8 años de experiencia. Especialista en cortes clásicos, modernos y diseños personalizados. Atiendo con cuidado y profesionalismo.',
-    especialidades: ['Cortes clásicos', 'Cortes modernos', 'Diseños a medida', 'Cuidado de barba'],
-    certificaciones: ['Barbería profesional', 'Higiene y salud', 'Atención al cliente'],
+  // Determinar si se visita el perfil usando la ruta con id (cliente) o el propio profesional autenticado
+  const viewingId = params.id ?? profesionalIdFromAuth;
+  const isViewingAsClient = Boolean(params.id && String(params.id) !== String(profesionalIdFromAuth));
+
+  // Cargar datos del profesional y calificaciones
+  useEffect(() => {
+    const cargar = async () => {
+      if (!viewingId) return;
+
+      // Si se pide por URL, obtener el profesional desde la lista (backend no tiene endpoint single)
+      if (params.id) {
+        const resP = await traerProfesionales();
+        if (resP.ok) {
+          const found = (resP.data || []).find((p) => String(p.id) === String(params.id));
+          if (found) {
+            setProfData({
+              nombre: found.nombre || found.Nombre || 'Profesional',
+              especialidad: found.especialidad || found.Especialidad || '',
+              avatar: '💈',
+              rating: found.rating ?? 0,
+              servicios: 0,
+              bio: '',
+              especialidades: [],
+              certificaciones: [],
+            });
+          } else {
+            setProfData(null);
+          }
+        }
+      } else {
+        // Vista del propio profesional: usar datos del usuario del contexto
+        setProfData({
+          nombre: user?.nombre || user?.Nombre || 'Profesional',
+          especialidad: user?.especialidad || user?.Especialidad || '',
+          avatar: '💈',
+          rating: user?.rating ?? 0,
+          servicios: 0,
+          bio: '',
+          especialidades: [],
+          certificaciones: [],
+        });
+      }
+
+      // Calificaciones
+      setCargando(true);
+      const res = await traerCalificacionesProfesional(viewingId);
+      if (res.ok) setCalificaciones(res.data || []);
+      setCargando(false);
+    };
+
+    cargar();
+  }, [params.id, profesionalIdFromAuth, user]);
+
+  // Calcular distribución de calificaciones
+  const calcularRatingDistribution = () => {
+    const dist = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    calificaciones.forEach((cal) => {
+      if (cal.Puntuacion) {
+        dist[cal.Puntuacion]++;
+      }
+    });
+    return dist;
   };
 
-  const reviews = [
-    { cliente: 'Juan P.', rating: 5, comentario: 'Excelente servicio, muy profesional' },
-    { cliente: 'Pedro G.', rating: 4, comentario: 'Buen corte, rápido y amable' },
-    { cliente: 'Luis M.', rating: 5, comentario: 'El mejor barbero de la ciudad' },
-  ];
-
-  const ratingDistribution = {
-    5: 95,
-    4: 20,
-    3: 10,
-    2: 2,
-    1: 0,
-  };
+  const ratingDistribution = calcularRatingDistribution();
 
   const handleLogout = () => {
     if (confirm('¿Deseas cerrar sesión?')) {
+      logout();
       navigate('/');
     }
   };
@@ -46,7 +94,7 @@ export default function PerfilProfesional() {
     <div className="perfil-profesional-container">
       {/* Header */}
       <div className="perfil-header">
-        <button onClick={() => navigate('/pro/inicio')} className="back-btn">
+        <button onClick={() => (isViewingAsClient ? navigate(-1) : navigate('/pro/inicio'))} className="back-btn">
           ← Volver
         </button>
         <h1>Mi Perfil</h1>
@@ -54,13 +102,13 @@ export default function PerfilProfesional() {
 
       {/* Banner con Avatar */}
       <div className="perfil-banner">
-        <div className="avatar-grande">{profesional.avatar}</div>
-        <h2>{profesional.nombre}</h2>
-        <p>{profesional.especialidad}</p>
+        <div className="avatar-grande">{profData?.avatar ?? '💈'}</div>
+        <h2>{profData?.nombre ?? 'Profesional'}</h2>
+        <p>{profData?.especialidad}</p>
         <div className="perfil-stats">
-          <span>⭐ {profesional.rating}</span>
-          <span>📝 {profesional.reviews} reviews</span>
-          <span>✓ {profesional.servicios} servicios</span>
+          <span>⭐ {profData?.rating ?? '—'}</span>
+          <span>📝 {calificaciones.length} reviews</span>
+          <span>✓ {profData?.servicios ?? 0} servicios</span>
         </div>
       </div>
 
@@ -139,15 +187,19 @@ export default function PerfilProfesional() {
 
             <div className="reviews-list">
               <h3>Comentarios recientes</h3>
-              {reviews.map((review, idx) => (
-                <div key={idx} className="review-card">
-                  <div className="review-header">
-                    <h4>{review.cliente}</h4>
-                    <span className="review-stars">{'⭐'.repeat(review.rating)}</span>
+              {calificaciones.length === 0 ? (
+                <p>No hay calificaciones aún</p>
+              ) : (
+                calificaciones.slice(0, 5).map((cal, idx) => (
+                  <div key={idx} className="review-card">
+                    <div className="review-header">
+                      <h4>{cal.NombreUsuario || 'Cliente anónimo'}</h4>
+                      <span className="review-stars">{'⭐'.repeat(cal.Puntuacion)}</span>
+                    </div>
+                    <p>{cal.Comentario || 'Sin comentario'}</p>
                   </div>
-                  <p>{review.comentario}</p>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         )}

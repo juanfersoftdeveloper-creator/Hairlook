@@ -16,6 +16,7 @@ export async function login(correo, password, tipo) {
     const res = await fetch(`${API_BASE}/c_login.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ correo, password, tipo }),
     });
 
@@ -42,6 +43,7 @@ export async function registerCliente(datos) {
     const res = await fetch(`${API_BASE}/c_registro_usuario.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(datos),
     });
 
@@ -67,6 +69,7 @@ export async function registerProfesional(datos) {
     const res = await fetch(`${API_BASE}/c_registro_profesional.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(datos),
     });
 

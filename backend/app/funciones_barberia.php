@@ -458,7 +458,8 @@ function agregar_servicio_a_cita(int $id_cita, int $id_servicio, float $precio):
 }
 
 // === INICIALIZACIÓN DE SESIÓN ===
-session_start();
+// session_start() se controla desde cada endpoint público para evitar llamadas múltiples
+// Si se desea habilitar globalmente, mover session_start() al inicio de los controladores públicos.
 
 /* ==== NUEVAS FUNCIONES SOLICITADAS ==== */
 
@@ -540,16 +541,30 @@ function login_profesional(string $correo, string $contrasena): ?array {
 
 /**
  * Obtiene todas las citas (opcionalmente por usuario)
+ * Mejorado para incluir información del profesional y servicios
  */
 function traer_citas(?int $id_usuario = null): array {
     try {
         $conn = getConnection();
-        $query = "SELECT c.ID_Cita, c.Fecha_hora, c.Estado, c.ID_Usuario, c.ID_Profesional FROM cita c";
+        $query = "
+            SELECT c.ID_Cita, c.Fecha_hora AS Fecha, 
+                   CASE WHEN c.Fecha_hora IS NOT NULL THEN DATE_FORMAT(c.Fecha_hora, '%H:%i') ELSE NULL END AS Hora,
+                   c.Estado, c.ID_Usuario, c.ID_Profesional,
+                   p.Nombre AS NombreProfesional, p.Especialidad,
+                   GROUP_CONCAT(s.Nombre SEPARATOR ', ') AS NombreServicio,
+                   COALESCE(GROUP_CONCAT(dc.Precio_aplicado), 0) AS Precio
+            FROM cita c
+            JOIN profesional p ON c.ID_Profesional = p.ID_Profesional
+            LEFT JOIN detalle_cita dc ON dc.ID_Cita = c.ID_Cita
+            LEFT JOIN servicio s ON s.ID_Servicio = dc.ID_Servicio
+        ";
         $params = [];
         if ($id_usuario !== null) {
             $query .= " WHERE c.ID_Usuario = ?";
             $params[] = $id_usuario;
         }
+        $query .= " GROUP BY c.ID_Cita ORDER BY c.Fecha_hora DESC";
+        
         $stmt = $conn->prepare($query);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

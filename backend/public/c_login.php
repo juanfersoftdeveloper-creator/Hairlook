@@ -4,16 +4,32 @@
  * POST /backend/public/c_login.php
  */
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: http://localhost:5173');
+$allowed_origins = ['http://localhost:5173', 'http://localhost:5174'];
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (in_array($origin, $allowed_origins)) {
+    header('Access-Control-Allow-Origin: ' . $origin);
+} else {
+    header('Access-Control-Allow-Origin: http://localhost:5173');
+}
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Credentials: true'); // Importante para mantener sesiones
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;
 }
 
+// Inicializar sesión para que las funciones de login puedan usar $_SESSION
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Cargamos tu bootstrap (que asumo incluye tus funciones de barbería)
 require_once __DIR__ . '/../app/bootstrap.php';
+
+// Si bootstrap.php NO incluye las funciones, descomenta la siguiente línea:
+// require_once __DIR__ . '/../functions/funciones_barberia.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -29,7 +45,8 @@ if (!is_array($input)) {
 }
 
 $correo = $input['correo'] ?? '';
-$password = $input['password'] ?? '';
+// CORRECCIÓN 1: Capturamos 'password' que es lo que manda React
+$password = $input['password'] ?? $input['contrasena'] ?? ''; 
 $tipo = $input['tipo'] ?? 'cliente'; // 'cliente' o 'profesional'
 
 if (empty($correo) || empty($password)) {
@@ -39,54 +56,30 @@ if (empty($correo) || empty($password)) {
 }
 
 try {
-    $conn = getConnection();
+    $usuarioLogueado = null;
     
+    // Usamos las funciones de backend que ya manejan
+    // los nombres correctos de BD y el password_verify()
     if ($tipo === 'profesional') {
-        $stmt = $conn->prepare("SELECT id, nombres, apellidos, correo FROM profesional WHERE correo = :correo");
+        $usuarioLogueado = login_profesional($correo, $password);
     } else {
-        $stmt = $conn->prepare("SELECT id, nombres, apellidos, correo FROM usuario WHERE correo = :correo");
+        $usuarioLogueado = iniciar_sesion($correo, $password);
     }
     
-    $stmt->execute([':correo' => $correo]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$user) {
+    if (!$usuarioLogueado) {
         http_response_code(401);
         echo json_encode(['ok' => false, 'error' => 'Correo o contraseña incorrectos']);
         exit;
     }
     
-    // Verificar contraseña (asumiendo que está hasheada)
-    // Por ahora verificamos directamente (en producción usar password_verify)
-    if ($tipo === 'profesional') {
-        $stmt = $conn->prepare("SELECT * FROM profesional WHERE correo = :correo AND password = :password");
-    } else {
-        $stmt = $conn->prepare("SELECT * FROM usuario WHERE correo = :correo AND password = :password");
-    }
-    
-    $stmt->execute([':correo' => $correo, ':password' => $password]);
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$result) {
-        http_response_code(401);
-        echo json_encode(['ok' => false, 'error' => 'Correo o contraseña incorrectos']);
-        exit;
-    }
-    
-    // Login exitoso - crear sesión
-    session_start();
-    if ($tipo === 'profesional') {
-        $_SESSION['profesional'] = $user;
-    } else {
-        $_SESSION['usuario'] = $user;
-    }
-    
+    // Login exitoso
     echo json_encode([
         'ok' => true,
         'data' => [
-            'id' => $user['id'],
-            'nombre' => $user['nombres'],
-            'correo' => $user['correo'],
+            // Extraemos los IDs según el rol que se logueó
+            'id' => $tipo === 'profesional' ? $usuarioLogueado['ID_Profesional'] : $usuarioLogueado['ID_Usuario'],
+            'nombre' => $usuarioLogueado['Nombre'],
+            'correo' => $usuarioLogueado['Correo'],
             'tipo' => $tipo
         ]
     ]);

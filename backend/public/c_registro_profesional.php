@@ -4,9 +4,17 @@
  * POST /backend/public/c_registro_profesional.php
  */
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: http://localhost:5173');
+$allowed_origins = ['http://localhost:5173', 'http://localhost:5174'];
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (in_array($origin, $allowed_origins)) {
+    header('Access-Control-Allow-Origin: ' . $origin);
+} else {
+    header('Access-Control-Allow-Origin: http://localhost:5173');
+}
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
+// Allow cookies/sessions from the frontend when using credentials: 'include'
+header('Access-Control-Allow-Credentials: true');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
@@ -35,13 +43,14 @@ $correo              = $input['correo'] ?? '';
 $password            = $input['password'] ?? '';
 $confirmarPassword   = $input['confirmarPassword'] ?? $password;
 $especialidad        = $input['especialidad'] ?? '';
-$experiencia         = $input['experiencia'] ?? '';
+// Accept either 'experiencia' (backend) or 'aniosExperiencia' (frontend) as source
+$experiencia         = $input['experiencia'] ?? $input['aniosExperiencia'] ?? '';
 
 try {
     $conn = getConnection();
     
-    // Validar que el correo no exista
-    $stmt = $conn->prepare("SELECT id FROM profesional WHERE correo = :correo");
+    // Validar que el correo no exista (usar el nombre real de columna ID_Profesional y Correo)
+    $stmt = $conn->prepare("SELECT ID_Profesional FROM profesional WHERE Correo = :correo");
     $stmt->execute([':correo' => $correo]);
     if ($stmt->fetch()) {
         http_response_code(400);
@@ -56,22 +65,21 @@ try {
         exit;
     }
     
-    // Insertar profesional
-    $stmt = $conn->prepare("
-        INSERT INTO profesional (nombres, apellidos, cedula, correo, password, especialidad, experiencia)
-        VALUES (:nombres, :apellidos, :cedula, :correo, :password, :especialidad, :experiencia)
-    ");
-    
+    // Map frontend fields to the profesional table schema
+    $nombre_completo = trim(($nombres . ' ' . $apellidos));
+    // Hashear la contraseña antes de guardarla para que password_verify funcione al iniciar sesión
+    $contrasena = password_hash($password, PASSWORD_DEFAULT);
+
+    // Insertar profesional en columnas existentes: Nombre, Especialidad, Correo, Contrasena
+    $stmt = $conn->prepare("INSERT INTO profesional (Nombre, Especialidad, Correo, Contrasena) VALUES (:nombre, :especialidad, :correo, :contrasena)");
+
     $result = $stmt->execute([
-        ':nombres' => $nombres,
-        ':apellidos' => $apellidos,
-        ':cedula' => $cedula,
-        ':correo' => $correo,
-        ':password' => $password, // En producción usar password_hash
+        ':nombre' => $nombre_completo,
         ':especialidad' => $especialidad,
-        ':experiencia' => $experiencia
+        ':correo' => $correo,
+        ':contrasena' => $contrasena
     ]);
-    
+
     if ($result) {
         echo json_encode(['ok' => true]);
     } else {

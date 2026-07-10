@@ -31,3 +31,37 @@ Thumbs.db
 *.log
 .cache/
 .temp/
+
+# === FRONTEND (React) ===
+# Dependencias de Node (esta carpeta es gigante y nunca se sube)
+frontend/node_modules/
+
+# Carpetas de compilación para producción
+frontend/build/
+frontend/dist/
+
+# Archivos de entorno locales de React (API keys, rutas del servidor)
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# === BACKEND (PHP) ===
+# Archivos de configuración con contraseñas de la base de datos
+backend/config.local.php
+backend/conexion_secreta.php
+# Si usas variables de entorno en PHP:
+backend/.env
+backend/backups/
+
+# === HERRAMIENTAS Y SISTEMA ===
+.antigravityignore
+.cursorignore
+.DS_Store
+Thumbs.db
+EVIDENCIA_DESARROLLO.md
+FRONTEND_COMPLETION_SUMMARY.md
+RESUMEN_CAMBIOS.md
+TECHNICAL_DETAILS.md
+TESTING_GUIDE.md
